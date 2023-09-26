@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "./interface/IERC6551Registry.sol";
 import "./library/ERC6551BytecodeLib.sol";
 
-contract Boralabs6551Registry is IERC6551Registry {
+contract BoralabsTBA6551Registry is IERC6551Registry {
     error AccountCreationFailed();
 
     // =========================================================================================== //

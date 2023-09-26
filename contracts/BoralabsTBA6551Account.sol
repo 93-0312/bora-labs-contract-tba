@@ -14,7 +14,7 @@ import "./interface/IERC6551Executable.sol";
 import "./interface/IERC6551Account.sol";
 import "./common/BoralabsBase.sol";
 
-contract Boralabs6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Account, IERC6551Executable {
+contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Account, IERC6551Executable {
 
     uint256 public state;
     bytes4 private constant ERC1155_ACCEPTED = 0xf23a6e61; // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
@@ -112,7 +112,9 @@ contract Boralabs6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Account
     // =========================================================================================== //
     // supportsInterface
     // =========================================================================================== //
-    function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external pure returns (bool) {
         return (interfaceId == type(IERC165).interfaceId ||
         interfaceId == type(IERC6551Account).interfaceId ||
             interfaceId == type(IERC6551Executable).interfaceId);
@@ -121,7 +123,8 @@ contract Boralabs6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Account
     // =========================================================================================== //
     // token
     // =========================================================================================== //
-    function token() public view returns ( uint256, address, uint256 ) {
+    function token(
+    ) public view returns ( uint256, address, uint256 ) {
         bytes memory footer = new bytes(0x60);
 
         assembly {
