@@ -30,7 +30,7 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
      * @param amount amount to mint
      * @param data additional data
      */
-    function mint(address to, uint256 id, uint256 amount, bytes memory data) external nonReentrant onlyOwner { // nonReentrant >> 무슨 역할인지 확인 : 여러번 호출 하는 것을 방지
+    function mint(address to, uint256 id, uint256 amount, bytes memory data) external nonReentrant onlyOwner {
         super._mint(to, id, amount, data);
     }
 
@@ -111,7 +111,7 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
     ) external view returns (uint256[] memory tokenIds_, uint256[] memory balances_) {
         uint256 assetCount = _tokenIds[owner].length();
 
-        uint256[] memory tokenIds = new uint256[](assetCount);  // assetCount >> length 확인
+        uint256[] memory tokenIds = new uint256[](assetCount);
         uint256[] memory balances = new uint256[](assetCount);
 
         for (uint256 i = 0; i < assetCount; ++i) {
@@ -142,7 +142,7 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
         uint256 balance = balanceOf(account, tokenId);
 
         if (balance > 0) {
-            _tokenIds[account].add(tokenId);        // EnumerableSet -> add -> _add에서 _contains 확인
+            _tokenIds[account].add(tokenId);
         } else {
             _tokenIds[account].remove(tokenId);
         }
