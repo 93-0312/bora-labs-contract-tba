@@ -10,6 +10,17 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "./common/BoralabsBase.sol";
 
 contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
+    // =========================================================================================== //
+    // BORA LABS 용 변수
+    // =========================================================================================== //
+    // 발행가능 mintNum : mint 할 때마다 1씩 올라간다...
+    uint256 public availableMintNum = 1;
+    // 1회 mint 시 발급할 수량 : character : 3, item : 5
+    // 3일 경우 metadata 는 tokenId 앞에 숫자가 1 이면 1, 2이면 2, 3이면 3, 4이면 1 이렇게 리턴한다.
+    uint256 public oneTimeMintNum = 5;
+    // 발행 번호대 oneTimeMintNum 이 5 이면 10000001, 20000001, 30000001, 40000001, 50000001 이렇게 민트된다.
+    uint256 public mintBand = 10000000;
+
     using EnumerableSet for EnumerableSet.UintSet;
     using Strings for uint256;
 
@@ -26,13 +37,20 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
     /**
      * @notice Mint token for account
      * @param to account receive token
-     * @param id token id
      * @param amount amount to mint
      * @param data additional data
      */
-    function mint(address to, uint256 id, uint256 amount, bytes memory data) external nonReentrant onlyOwner {
-        super._mint(to, id, amount, data);
+    function tbaMint(
+        address to,
+        uint256 amount,
+        bytes memory data
+    ) public onlyOwner {
+        for ( uint256 i = 1; i <= oneTimeMintNum; ++i ){
+            super._mint(to, mintBand*i + availableMintNum, amount, data);
+        }
+        unchecked { ++availableMintNum; }
     }
+
 
     // =========================================================================================== //
     // BURN
@@ -83,10 +101,21 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
      * @param id token ID
      * @return token URI
      */
-    function uri(uint256 id) public view virtual override returns (string memory) {
+    function uri(
+        uint256 id
+    ) public view virtual override returns (string memory) {
+        require(id > 0, "invalid tokenId");
+
+        uint256 number = id;
+
+        while (number >= 10) {
+            number /= 10;
+        }
+        number %= oneTimeMintNum;
+
         string memory baseURI = getBaseURI();
 
-        return string(abi.encodePacked(baseURI, Strings.toString(id)));
+        return string(abi.encodePacked(baseURI, Strings.toString(number)));
     }
 
     /**
