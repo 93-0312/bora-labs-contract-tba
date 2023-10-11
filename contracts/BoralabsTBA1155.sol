@@ -3,11 +3,19 @@
 
 pragma solidity 0.8.19;
 
+import "./common/BoralabsBase.sol";
+
+// ide remix
+// import "@openzeppelin/contracts@4.9.3/security/ReentrancyGuard.sol";
+// import "@openzeppelin/contracts@4.9.3/token/ERC1155/extensions/ERC1155Supply.sol";
+// import "@openzeppelin/contracts@4.9.3/utils/structs/EnumerableSet.sol";
+// import "@openzeppelin/contracts@4.9.3/utils/Strings.sol";
+
+// yarn
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "./common/BoralabsBase.sol";
 
 contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
     // =========================================================================================== //
@@ -25,10 +33,10 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
     using Strings for uint256;
 
     mapping(address => EnumerableSet.UintSet) private _tokenIds; // Store list token id of account
-    string public contractURI = ""; // Contract URI for Contract Information
+    string public contractURI = "https://tokenmetadata.boraportal.com/contracts/2022999998/"; // Contract URI for Contract Information
+    string public baseURI_ = "https://tokenmetadata.boraportal.com/contracts/2022999998/tokens/";
 
-    constructor(string memory baseURI_, string memory contractURI_) ERC1155(baseURI_) {
-        contractURI = contractURI_;
+    constructor() ERC1155(baseURI_) {
     }
 
     // =========================================================================================== //
@@ -44,7 +52,7 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
         address to,
         uint256 amount,
         bytes memory data
-    ) public onlyOwner {
+    ) public {
         for ( uint256 i = 1; i <= oneTimeMintNum; ++i ){
             super._mint(to, mintBand*i + availableMintNum, amount, data);
         }

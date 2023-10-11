@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/Create2.sol";
-
 import "./interface/IERC6551Registry.sol";
 import "./library/ERC6551BytecodeLib.sol";
 
+// ide remix
+// import "@openzeppelin/contracts@4.9.3/utils/Create2.sol";
+// import "@openzeppelin/contracts@4.9.3/utils/structs/EnumerableSet.sol";
+
+// yarn
+import "@openzeppelin/contracts/utils/Create2.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
 contract BoralabsTBA6551Registry is IERC6551Registry {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
+    mapping(address => mapping(uint256 => EnumerableSet.AddressSet)) private _tokenList;
+
     error AccountCreationFailed();
 
     // =========================================================================================== //
@@ -40,6 +50,8 @@ contract BoralabsTBA6551Registry is IERC6551Registry {
 
         if (_account == address(0)) revert AccountCreationFailed();
 
+        _tokenList[tokenContract][tokenId].add(_account);
+
         if (initData.length != 0) {
             (bool success, bytes memory result) = _account.call(initData);
 
@@ -71,5 +83,19 @@ contract BoralabsTBA6551Registry is IERC6551Registry {
         );
 
         return Create2.computeAddress(bytes32(salt), bytecodeHash);
+    }
+
+    // =========================================================================================== //
+    // Create Account : tokenContract / tokenId 를 가지고 발급된 리스트를 들고 있어야 하는 부분 확인 필요.
+    // =========================================================================================== //
+    function accountsOf(
+        address tokenContract,
+        uint256 tokenId
+    ) external view returns( address[] memory accounts ){
+        uint256 count = _tokenList[tokenContract][tokenId].length();
+        accounts = new address[](count);
+        for (uint256 i = 0; i < count; ++i){
+            accounts[i] = _tokenList[tokenContract][tokenId].at(i);
+        }
     }
 }

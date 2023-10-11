@@ -4,6 +4,12 @@
 pragma solidity 0.8.19;
 
 import "./common/BoralabsBase.sol";
+
+// ide remix
+// import "@openzeppelin/contracts@4.9.3/token/ERC721/extensions/ERC721Enumerable.sol";
+// import "@openzeppelin/contracts@4.9.3/security/ReentrancyGuard.sol";
+
+// yarn
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -22,19 +28,16 @@ contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard{
     // =========================================================================================== //
     // 721
     // =========================================================================================== //
-    string public contractURI = "";
-    string public baseURI_ = "";
+    string public contractURI = "https://tokenmetadata.boraportal.com/contracts/2022999999/";
+    string public baseURI_ = "https://tokenmetadata.boraportal.com/contracts/2022999999/tokens/";
 
     constructor(
-        string memory baseURI__,
-        string memory contractURI_,
         string memory name_,
         string memory symbol_
     ) ERC721(name_, symbol_) {
-        baseURI_ = baseURI__;
-        contractURI = contractURI_;
     }
 
+    /**
     function setContractURI(string calldata uri) external onlyOwner {
         contractURI = uri;
     }
@@ -42,6 +45,7 @@ contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard{
     function setBaseURI(string calldata uri) external onlyOwner {
         baseURI_ = uri;
     }
+    **/
 
     // =========================================================================================== //
     // TRANSFER
@@ -59,7 +63,7 @@ contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard{
     // =========================================================================================== //
     function tbaMint(
         address to
-    ) public onlyOwner {
+    ) public {
         for ( uint256 i = 1; i <= oneTimeMintNum; ++i ){
             _safeMint(to, mintBand*i + availableMintNum );
         }
