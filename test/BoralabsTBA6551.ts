@@ -60,9 +60,12 @@ describe("BoralabsTBA6551: Integration test", function () {
     "function safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes data)",
     "function burn(uint256 id, uint256 amount)",
     "function setApprovalForAll(address operator, bool approved)",
-    "function transferCoin(address to, uint256 amount)",
     "function transfer(address to, uint256 amount)",
     "function transferFrom(address from, address to, uint256 tokenId)",
+  ]);
+
+  const ifaceAccount = new Interface([
+    "function transferCoin(address to,uint256 amount)",
   ]);
 
   beforeEach(async function () {
@@ -1797,21 +1800,21 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.before(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "balance:",
         (await bora1155.tokenCountOf(User1.address)) * amount
       );
 
       // Step 1: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA’s owner.
       this.mlog.log(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
       );
       await bora1155.tbaMint(User1.address, amount, "0x");
 
       // Step 2: TBA’ owner transfer token id 10000002 with an amount of 10 to TBA account
       this.mlog.log(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "transfer token id 10000001 with an amount of 10 to TBA account"
       );
       await bora1155
@@ -1820,7 +1823,7 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 3: TBA’ owner transfer token id 20000002 with an amount of 10 to TBA account
       this.mlog.log(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "transfer token id 20000001 with an amount of 10 to TBA account"
       );
       await bora1155
@@ -1829,7 +1832,7 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 4: TBA’ owner transfer token id 30000002 with an amount of 10 to TBA account
       this.mlog.log(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "transfer token id 30000001 with an amount of 10 to TBA account"
       );
       await bora1155
@@ -1853,7 +1856,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.after(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "balance:",
         (await bora1155.tokenCountOf(User1.address)) * amount
       );
@@ -1872,16 +1875,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         (await bora1155.tokenCountOf(User2.address)) * amount
       );
 
-      // Step 1: Owner of ERC1155 mint tokens (10000002, 20000002, 30000002, 40000002 and 50000002) with an amount of 10 for User 2
+      // Step 1: Owner of ERC1155 mint tokens (10000002, 20000002, 30000002, 40000002 and 50000002) with an amount of 10 for User2
       this.mlog.log(
-        "[User 2]",
+        "[User2]",
         "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
       );
       await bora1155.tbaMint(User2.address, amount, "0x");
 
-      // Step 2: User 2 transfer token id 10000002 with an amount of 10 to TBA account
+      // Step 2: User2 transfer token id 10000002 with an amount of 10 to TBA account
       this.mlog.log(
-        "[User 2]",
+        "[User2]",
         "transfer token id 10000001 with an amount of 10 to TBA account"
       );
       await bora1155
@@ -1890,7 +1893,7 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 3: TBA’ owner transfer token id 20000002 with an amount of 10 to TBA account
       this.mlog.log(
-        "[User 2]",
+        "[User2]",
         "transfer token id 20000001 with an amount of 10 to TBA account"
       );
       await bora1155
@@ -1899,7 +1902,7 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 4: TBA’ owner transfer token id 30000002 with an amount of 10 to TBA account
       this.mlog.log(
-        "[User 2",
+        "[User2",
         "transfer token id 30000001 with an amount of 10 to TBA account"
       );
       await bora1155
@@ -1923,7 +1926,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.after(
-        "[User 2]",
+        "[User2]",
         "balance:",
         (await bora1155.tokenCountOf(User2.address)) * amount
       );
@@ -1940,7 +1943,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.before(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "balance:",
         (await bora1155.tokenCountOf(User1.address)) * amount
       );
@@ -1993,7 +1996,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         (await bora1155.tokenCountOf(tbaAddress)) * amount
       );
       this.mlog.after(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "balance:",
         (await bora1155.tokenCountOf(User1.address)) * amount
       );
@@ -2007,7 +2010,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.before(
-        "[User 2]",
+        "[User2]",
         "balance:",
         (await bora1155.tokenCountOf(User2.address)) * amount
       );
@@ -2019,28 +2022,28 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       await bora1155.tbaMint(tbaAddress, amount, "0x");
 
-      // Step 2: TBA call transfer1155() to transfer token id 10000001 with an amount of 10 to User 2
+      // Step 2: TBA call transfer1155() to transfer token id 10000001 with an amount of 10 to User2
       this.mlog.log(
         "[TBA Account]",
-        "call transfer1155() to transfer token id 10000001 with an amount of 10 to User 2"
+        "call transfer1155() to transfer token id 10000001 with an amount of 10 to User2"
       );
       await tba
         .connect(User1)
         .transfer1155(bora1155.target, User2.address, 10000001, amount, "0x");
 
-      // Step 3: TBA call transfer1155() to transfer token id 20000001 with an amount of 10 to User 2
+      // Step 3: TBA call transfer1155() to transfer token id 20000001 with an amount of 10 to User2
       this.mlog.log(
         "[TBA Account]",
-        "call transfer1155() to transfer token id 20000001 with an amount of 10 to User 2"
+        "call transfer1155() to transfer token id 20000001 with an amount of 10 to User2"
       );
       await tba
         .connect(User1)
         .transfer1155(bora1155.target, User2.address, 20000001, amount, "0x");
 
-      // Step 4: TBA call transfer1155() to transfer token id 10000001 with an amount of 10 to User 2
+      // Step 4: TBA call transfer1155() to transfer token id 10000001 with an amount of 10 to User2
       this.mlog.log(
         "[TBA Account]",
-        "call transfer1155() to transfer token id 10000001 with an amount of 10 to User 2"
+        "call transfer1155() to transfer token id 10000001 with an amount of 10 to User2"
       );
       await tba
         .connect(User1)
@@ -2049,7 +2052,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       // Step 5: Verify token balance of TBA account is 20
       expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
 
-      // Step 6: Verify token balance of User 2 is 30
+      // Step 6: Verify token balance of User2 is 30
       expect((await bora1155.tokenCountOf(User2.address)) * amount).to.equal(
         30
       );
@@ -2060,7 +2063,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         (await bora1155.tokenCountOf(tbaAddress)) * amount
       );
       this.mlog.after(
-        "[User 2]",
+        "[User2]",
         "balance:",
         (await bora1155.tokenCountOf(User2.address)) * amount
       );
@@ -2153,7 +2156,7 @@ describe("BoralabsTBA6551: Integration test", function () {
     });
 
     it("Should successfully when transfer multiple time ERC1155 to another TBA with different TBA’s owner", async function () {
-      // Step 1: User 2 creates a TBA account 2 with tokenId 10000002
+      // Step 1: User2 creates a TBA account 2 with tokenId 10000002
       await bora721.tbaMint(User2.address);
       await bora6551Registry
         .connect(User2)
@@ -2247,7 +2250,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.before(
-        "[User 2]",
+        "[User2]",
         "balance:",
         (await bora1155.tokenCountOf(User2.address)) * amount
       );
@@ -2304,7 +2307,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       // Step 5: Verify token balance of TBA account is 20
       expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
 
-      // Step 6: Verify token balance of User 2 is 30
+      // Step 6: Verify token balance of User2 is 30
       expect((await bora1155.tokenCountOf(User2)) * amount).to.equal(30);
 
       this.mlog.after(
@@ -2313,7 +2316,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         (await bora1155.tokenCountOf(tbaAddress)) * amount
       );
       this.mlog.after(
-        "[User 2]",
+        "[User2]",
         "balance:",
         (await bora1155.tokenCountOf(User2)) * amount
       );
@@ -2327,7 +2330,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.before(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "balance:",
         (await bora1155.tokenCountOf(User1.address)) * amount
       );
@@ -2395,7 +2398,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         (await bora1155.tokenCountOf(tbaAddress)) * amount
       );
       this.mlog.after(
-        "[TBA's Owner]",
+        "[TBA’s Owner]",
         "balance:",
         (await bora1155.tokenCountOf(User1.address)) * amount
       );
@@ -2503,7 +2506,7 @@ describe("BoralabsTBA6551: Integration test", function () {
     });
 
     it("Should successfully when transfers multiple time ERC1155 to another TBA with different TBA’s owner via execute()", async function () {
-      // Step 1: User 2 creates a TBA account 2 with tokenId 10000002.
+      // Step 1: User2 creates a TBA account 2 with tokenId 10000002.
       await bora721.tbaMint(User2.address);
       await bora6551Registry
         .connect(User2)
@@ -2711,6 +2714,860 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "balance:",
         (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+    });
+  });
+
+  describe("Native Coin Receive Ability", async function () {
+    it("Should successfully when receive native coin from TBA’s owner", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA.
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log(
+        "[TBA’s owner]",
+        "sends a transaction with 1000 wei to TBA"
+      );
+      await expect(await User1.sendTransaction({ to: tbaAddress, value: 1000 }))
+        .to.be.ok;
+
+      // Step 3: Verify balance of TBA increase 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(1000);
+
+      // Step 4: Verify balance of TBA’s owner decrease 1000 wei
+      expect(await ethers.provider.getBalance(User1.address));
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+    it("Should successfully when transfer multiple time ERC20 from another account", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[User2]",
+        "balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+
+      // Step 1: User2 sends a transaction with 1000 wei to TBA
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log("[User2]", "sends a transaction with 1000 wei to TBA");
+      await expect(await User2.sendTransaction({ to: tbaAddress, value: 1000 }))
+        .to.be.ok;
+
+      // Step 3: Verify balance of TBA increase 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(1000);
+
+      // Step 4: Verify balance of TBA’s owner decrease 1000 wei
+      expect(await ethers.provider.getBalance(User1.address));
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[User2]",
+        "balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+    });
+  });
+
+  describe("Native Coin Send Ability", async function () {
+    it("Should successfully when transfer multiple time Native Coin to TBA’s owner", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA.
+      this.mlog.log("[TBA Account]", "receive 1000 wei from TBA’s owner");
+      await expect(
+        await User1.sendTransaction({
+          to: tbaAddress,
+          value: 1000,
+        })
+      ).to.be.ok;
+
+      // Step 2: TBA call transferCoin() to transfer 100 wei to TBA’s owner
+      this.mlog.log("[TBA Account]", "send 100 wei to TBA’s owner");
+      await tba.connect(User1).transferCoin(User1.address, 100);
+
+      // Step 3: TBA call transferCoin() to transfer 200 wei to TBA’s owner
+      this.mlog.log("[TBA Account]", "send 200 wei to TBA’s owner");
+      await tba.connect(User1).transferCoin(User1.address, 200);
+
+      // Step 4: TBA call transferCoin() to transfer 300 wei to TBA’s owner
+      this.mlog.log("[TBA Account]", "send 300 wei to TBA’s owner");
+      await tba.connect(User1).transferCoin(User1.address, 300);
+
+      // Step 5: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      // Step 6: Verify token balance of TBA’s owner is decrease 400 wei
+      expect(await ethers.provider.getBalance(User1.address));
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+
+    it("Should successfully when transfer multiple time Native Coin to another account", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[User2]",
+        "balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA
+      this.mlog.log("[TBA Account]", "receive 1000 wei from TBA’s owner");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 2: TBA call transferCoin() to transfer 100 wei User2
+      this.mlog.log("[TBA Account]", "send 100 wei to User2");
+      await tba.connect(User1).transferCoin(User2.address, 100);
+
+      // Step 3: TBA call transferCoin() to transfer 200 wei User2
+      this.mlog.log("[TBA Account]", "send 200 wei to User2");
+      await tba.connect(User1).transferCoin(User2.address, 200);
+
+      // Step 4: TBA call transferCoin() to transfer 300 wei User2
+      this.mlog.log("[TBA Account]", "send 300 wei to User2");
+      await tba.connect(User1).transferCoin(User2.address, 300);
+
+      // Step 5: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      // Step 6: Verify token balance of User2 is increase 600 wei
+      expect(await ethers.provider.getBalance(User2.address));
+
+      // Step 7: Verify token balance of TBA’s owner is decrease 1000 wei
+      expect(await ethers.provider.getBalance(User1.address));
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[User2]",
+        "balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+
+    it("Should successfully when transfer multiple time Native Coin to another TBA with same TBA’s owner", async function () {
+      // Step 1: User 1 creates a TBA account 2 with tokenId 20000001.
+      await bora6551Registry
+        .connect(User1)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          20000001,
+          0,
+          "0x"
+        );
+
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        20000001,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA Account 2]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 2: TBA’s owner sends a transaction with 1000 wei to TBA account 1.
+      this.mlog.log("[TBA Account 1]", "receive 1000 wei from TBA’s owner");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 3: Account 1 calls transferCoin() to transfer 100 wei to Account 2
+      this.mlog.log("[TBA Account 1]", "send 100 wei to TBA Account 2");
+      await tba.connect(User1).transferCoin(tbaAddress2, 100);
+
+      // Step 4: TBA call transferCoin() to transfer 200 wei User2
+      this.mlog.log("[TBA Account 1]", "send 200 wei to TBA Account 2");
+      await tba.connect(User1).transferCoin(tbaAddress2, 200);
+
+      // Step 5: TBA call transferCoin() to transfer 300 wei User2
+      this.mlog.log("[TBA Account 1]", "send 300 wei to TBA Account 2");
+      await tba.connect(User1).transferCoin(tbaAddress2, 300);
+
+      // Step 6: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      // Step 7: Verify token balance of TBA account 2 is increase 600 wei
+      expect(await ethers.provider.getBalance(tbaAddress2)).to.equal(600);
+
+      // Step 8: Verify token balance of TBA’s owner is decrease 1000 wei
+      expect(await ethers.provider.getBalance(User1.address));
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+
+    it("Should successfully when transfer multiple time Native Coin to another TBA with different TBA’s owner", async function () {
+      // Step 1: User2 creates a TBA account 2 with tokenId 10000002.
+      await bora721.tbaMint(User2.address);
+      await bora6551Registry
+        .connect(User2)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          10000002,
+          0,
+          "0x"
+        );
+
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        10000002,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA Account 2]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 2: TBA’s owner sends a transaction with 1000 wei to TBA account 1.
+      this.mlog.log("[TBA Account 1]", "receive 1000 wei from TBA 1's owner");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 3: Account 1 calls transferCoin() to transfer 100 wei to Account 2
+      this.mlog.log("[TBA Account 1]", "send 100 wei to TBA Account 2");
+      await tba.connect(User1).transferCoin(tbaAddress2, 100);
+
+      // Step 4: Account 1 calls transferCoin() to transfer 200 wei to Account 2
+      this.mlog.log("[TBA Account 1]", "send 200 wei to TBA Account 2");
+      await tba.connect(User1).transferCoin(tbaAddress2, 200);
+
+      // Step 5: Account 1 calls transferCoin() to transfer 300 wei to Account 2
+      this.mlog.log("[TBA Account 1]", "send 300 wei to TBA Account 2");
+      await tba.connect(User1).transferCoin(tbaAddress2, 300);
+
+      // Step 6: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      // Step 7: Verify token balance of TBA account 2 is increase 600 wei
+      expect(await ethers.provider.getBalance(tbaAddress2)).to.equal(600);
+
+      // Step 8: Verify token balance of TBA’s owner is decrease 1000 wei
+      expect(await ethers.provider.getBalance(User1.address));
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+    // TODO: use execute() to transfer coin to TBA account does not work
+    it("Should successfully when transfers multiple time Native Coin to another account via execute()", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[User2]",
+        "balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA.
+      this.mlog.log("[TBA Account]", "receive 1000 wei from TBA’s owner");
+      expect(
+        await User1.sendTransaction({
+          to: tbaAddress,
+          value: 1000,
+        })
+      ).to.be.ok;
+
+      // Step 2: Account 1 calls execute() to transfer 100 wei to User2
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 100 wei to TBA’s owner"
+      );
+      let data = ifaceAccount.encodeFunctionData("transferCoin", [
+        User2.address,
+        100,
+      ]);
+      await tba.connect(User1).execute(User2.address, 100, data, 0);
+
+      // Step 3: Account 1 calls execute() to transfer 200 wei to User2
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 200 wei to TBA’s owner"
+      );
+      let data2 = ifaceAccount.encodeFunctionData("transferCoin", [
+        User2.address,
+        200,
+      ]);
+      await tba.connect(User1).execute(User2.address, 200, data2, 0);
+
+      // Step 4: Account 1 calls execute() to transfer 300 wei to User2
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 300 wei to TBA’s owner"
+      );
+      let data3 = ifaceAccount.encodeFunctionData("transferCoin", [
+        User2.address,
+        300,
+      ]);
+      await tba.connect(User1).execute(User2.address, 300, data3, 0);
+
+      // Step 5: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      // Step 6: Verify token balance of User2 is increase 600 wei
+      expect(await ethers.provider.getBalance(User2.address)).to.equal(
+        ethers.parseUnits("10000000000000000000600", "wei")
+      );
+
+      this.mlog.after(
+        "[User2]",
+        "balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+
+      // Step 7: Verify token balance of TBA’s owner is decrease 1000 wei
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        ethers.parseUnits("9999977953177567913776", "wei")
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+
+    it("Should successfully when transfers multiple time Native Coin to TBA’s owner via execute()", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA.
+      this.mlog.log("[TBA Account]", "receive 1000 wei from TBA’s owner");
+      expect(
+        await User1.sendTransaction({
+          to: tbaAddress,
+          value: 1000,
+        })
+      ).to.be.ok;
+
+      // Step 2: TBA call execute() to transfer 100 wei to TBA’s owner
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 100 wei to TBA’s owner"
+      );
+      let data = ifaceAccount.encodeFunctionData("transferCoin", [
+        User1.address,
+        100,
+      ]);
+      await tba.connect(User1).execute(User1.address, 100, data, 0);
+
+      // Step 3: TBA call execute() to transfer 200 wei to TBA’s owner
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 200 wei to TBA’s owner"
+      );
+      let data2 = ifaceAccount.encodeFunctionData("transferCoin", [
+        User1.address,
+        200,
+      ]);
+      await tba.connect(User1).execute(User1.address, 200, data2, 0);
+
+      // Step 4: TBA call execute() to transfer 300 wei to TBA’s owner
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 300 wei to TBA’s owner"
+      );
+      let data3 = ifaceAccount.encodeFunctionData("transferCoin", [
+        User1.address,
+        300,
+      ]);
+      await tba.connect(User1).execute(User1.address, 300, data3, 0);
+
+      // Step 5: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      // Step 6: Verify token balance of TBA’s owner is decrease 400 wei
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        ethers.parseUnits("9999977962915511760722", "wei")
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+
+    // TODO: use execute() to transfer coin to TBA account does not work
+    it("Should successfully when transfers multiple time Native Coin to another TBA with same TBA’s owner via execute()", async function () {
+      // Step 1: User 1 creates a TBA account 2 with tokenId 20000001.
+      await bora6551Registry
+        .connect(User1)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          20000001,
+          0,
+          "0x"
+        );
+
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        20000001,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA Account 2]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 2: TBA’s owner sends a transaction with 1000 wei to TBA account 1.
+      this.mlog.log("[TBA Account 1]", "receive 1000 wei from TBA’s owner");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 3: Account 1 calls execute() to transfer 100 wei to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to send 100 wei to TBA Account 2"
+      );
+      let data = ifaceAccount.encodeFunctionData("transferCoin", [
+        tbaAddress2,
+        100,
+      ]);
+      await tba.connect(User1).execute(tbaAddress2, 100, data, 0);
+
+      // Step 4: Account 1 calls execute() to transfer 200 wei to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to send 200 wei to TBA Account 2"
+      );
+      let data2 = ifaceAccount.encodeFunctionData("transferCoin", [
+        tbaAddress2,
+        200,
+      ]);
+      await tba.connect(User1).execute(tbaAddress2, 200, data2, 0);
+
+      // Step 5: Account 1 calls execute() to transfer 300 wei to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to send 300 wei to TBA Account 2"
+      );
+      let data3 = ifaceAccount.encodeFunctionData("transferCoin", [
+        tbaAddress2,
+        300,
+      ]);
+      await tba.connect(User1).execute(tbaAddress2, 300, data3, 0);
+
+      // Step 6: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      // Step 7: Verify token balance of TBA account 2 is increase 600 wei
+      expect(await ethers.provider.getBalance(tbaAddress2)).to.equal(600);
+
+      // Step 8: Verify token balance of TBA’s owner is decrease 1000 wei
+      expect(await ethers.provider.getBalance(User1.address));
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+
+    it("Should successfully when transfers multiple time Native Coin to another TBA with different TBA’s owner via execute()", async function () {
+      // Step 1: User2 creates a TBA account 2 with tokenId 10000002.
+      await bora721.tbaMint(User2.address);
+      await bora6551Registry
+        .connect(User2)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          10000002,
+          0,
+          "0x"
+        );
+
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        10000002,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA Account 2]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      this.mlog.before(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 2: TBA’s owner sends a transaction with 1000 wei to TBA account 1.
+      this.mlog.log("[TBA Account 1]", "receive 1000 wei from TBA’s owner");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 3: Account 1 calls execute() to transfer 100 wei to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to send 100 wei to TBA Account 2"
+      );
+      let data = ifaceAccount.encodeFunctionData("transferCoin", [
+        tbaAddress2,
+        100,
+      ]);
+      await tba.connect(User1).execute(tbaAddress2, 100, data, 0);
+
+      // Step 4: Account 1 calls execute() to transfer 200 wei to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to send 200 wei to TBA Account 2"
+      );
+      let data2 = ifaceAccount.encodeFunctionData("transferCoin", [
+        tbaAddress2,
+        200,
+      ]);
+      await tba.connect(User1).execute(tbaAddress2, 200, data2, 0);
+
+      // Step 5: Account 1 calls execute() to transfer 300 wei to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to send 300 wei to TBA Account 2"
+      );
+      let data3 = ifaceAccount.encodeFunctionData("transferCoin", [
+        tbaAddress2,
+        300,
+      ]);
+      await tba.connect(User1).execute(tbaAddress2, 300, data3, 0);
+
+      // Step 6: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      // Step 7: Verify token balance of TBA account 2 is increase 600 wei
+      expect(await ethers.provider.getBalance(tbaAddress2)).to.equal(600);
+
+      // Step 8: Verify token balance of TBA’s owner is decrease 1000 wei
+      expect(await ethers.provider.getBalance(User1.address));
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      this.mlog.after(
+        "[TBA’s owner]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+  });
+
+  describe("Native Coin Burn Ability", async function () {
+    it("Should successfully when burn multiple time Native Coin", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA account.
+      this.mlog.log("[TBA Account]", "receive 1000 wei from TBA's owner");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 2: TBA account calls transferCoin() with address to is zero address and amount is 100 wei
+      this.mlog.log("[TBA Account]", "send 100 wei to zero address");
+      await tba.connect(User1).transferCoin(ethers.ZeroAddress, 100);
+
+      // Step 3: TBA account calls transferCoin() with address to is zero address and amount is 200 wei
+      this.mlog.log("[TBA Account]", "send 200 wei to zero address");
+      await tba.connect(User1).transferCoin(ethers.ZeroAddress, 200);
+
+      // Step 4: TBA account calls transferCoin() with address to is zero address and amount is 300 wei
+      this.mlog.log("[TBA Account]", "send 300 wei to zero address");
+      await tba.connect(User1).transferCoin(ethers.ZeroAddress, 300);
+
+      // Step 5: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+    });
+
+    it("Should successfully when burn multiple time Native Coin via execute()", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA account.
+      this.mlog.log("[TBA Account]", "receive 1000 wei from TBA's owner");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 2: TBA account calls transferCoin() with address to is zero address and amount is 100 wei
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 100 wei to zero address"
+      );
+      let data = ifaceAccount.encodeFunctionData("transferCoin", [
+        ethers.ZeroAddress,
+        100,
+      ]);
+      await tba.connect(User1).execute(ethers.ZeroAddress, 100, data, 0);
+
+      // Step 3: TBA account calls transferCoin() with address to is zero address and amount is 200 wei
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 200 wei to zero address"
+      );
+      let data2 = ifaceAccount.encodeFunctionData("transferCoin", [
+        ethers.ZeroAddress,
+        200,
+      ]);
+      await tba.connect(User1).execute(ethers.ZeroAddress, 200, data2, 0);
+
+      // Step 3: TBA account calls transferCoin() with address to is zero address and amount is 300 wei
+      this.mlog.log(
+        "[TBA Account]",
+        "call execute() to send 300 wei to zero address"
+      );
+      let data3 = ifaceAccount.encodeFunctionData("transferCoin", [
+        ethers.ZeroAddress,
+        300,
+      ]);
+      await tba.connect(User1).execute(ethers.ZeroAddress, 300, data3, 0);
+
+      // Step 5: Verify token balance of TBA account is increase 400 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(400);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
       );
     });
   });
@@ -3396,7 +4253,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       await bora1155.tbaMint(tbaAddress, 1, "0x");
 
       // Step 5: TBA’s owner transfers 1000 wei for Account 1
-      this.mlog.log("[TBA's Owner]", "transfers 1000 wei for Account 1");
+      this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for Account 1");
       await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
@@ -3534,7 +4391,7 @@ describe("BoralabsTBA6551: Integration test", function () {
     });
 
     it("Should successfully when transfer 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei to another TBA with different TBA’s owner", async function () {
-      // Step 1: User 2 creates a TBA account 2 with tokenId 10000002.
+      // Step 1: User2 creates a TBA account 2 with tokenId 10000002.
       await bora721.tbaMint(User2.address);
       await bora6551Registry
         .connect(User2)
@@ -3593,7 +4450,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       await bora1155.tbaMint(tbaAddress, 1, "0x");
 
       // Step 5: TBA’s owner transfers 1000 wei for Account 1
-      this.mlog.log("[TBA's Owner]", "transfers 1000 wei for Account 1");
+      this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for Account 1");
       await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
@@ -3745,7 +4602,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.before(
-        "[User 2]",
+        "[User2]",
         "ERC20 balance:",
         await bora20.balanceOf(User2.address),
         "ERC721 balance:",
@@ -3769,24 +4626,24 @@ describe("BoralabsTBA6551: Integration test", function () {
       await bora1155.tbaMint(tbaAddress, 1, "0x");
 
       // Step 4: TBA’s owner transfers 1000 wei for TBA account
-      this.mlog.log("[TBA's Owner]", "transfers 1000 wei for Accoun");
+      this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for Accoun");
       await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
 
-      // Step 5: TBA call execute() to transfer 10 tokens to User 2
+      // Step 5: TBA call execute() to transfer 10 tokens to User2
       this.mlog.log(
         "[TBA Account 1]",
-        "call execute() to transfer 10 tokens to User 2"
+        "call execute() to transfer 10 tokens to User2"
       );
       data = iface1155.encodeFunctionData("transfer", [User2.address, 10]);
       await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
 
-      // Step 6: TBA call execute() to transfer 3 tokens to User 2
+      // Step 6: TBA call execute() to transfer 3 tokens to User2
       this.mlog.log(
         "[TBA Account 1]",
-        "call execute() to transfer 3 tokens to User 2"
+        "call execute() to transfer 3 tokens to User2"
       );
       data = iface1155.encodeFunctionData("transferFrom", [
         tbaAddress,
@@ -3807,10 +4664,10 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
 
-      // Step 7: TBA call execute() to transfer 5 tokens to User 2
+      // Step 7: TBA call execute() to transfer 5 tokens to User2
       this.mlog.log(
         "[TBA Account 1]",
-        "call execute() to transfer 5 tokens to User 2"
+        "call execute() to transfer 5 tokens to User2"
       );
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
@@ -3855,30 +4712,30 @@ describe("BoralabsTBA6551: Integration test", function () {
         .connect(User1)
         .execute(await bora1155.getAddress(), 0, data1155Token5, 0);
 
-      // Step 8: TBA call execute() to transfer 1000 wei to User 2
+      // Step 8: TBA call execute() to transfer 1000 wei to User2
       this.mlog.log(
         "[TBA Account 1]",
-        "call transferCoin() to transfer 1000 wei to User 2"
+        "call transferCoin() to transfer 1000 wei to User2"
       );
-      data = iface1155.encodeFunctionData("transferCoin", [
+      data = ifaceAccount.encodeFunctionData("transferCoin", [
         User2.address,
         amount,
       ]);
       await tba.connect(User1).execute(User2.address, 1000, data, 0);
 
-      // Step 9: Verify User 2 token balance of ERC20 is 10
+      // Step 9: Verify User2 token balance of ERC20 is 10
       expect(await bora20.balanceOf(User2.address)).to.equal(10);
 
-      // Step 10: Verify User 2 token balance of ERC721 is 3
+      // Step 10: Verify User2 token balance of ERC721 is 3
       expect(await bora721.balanceOf(User2.address)).to.equal(3);
 
-      // Step 11: Verify User 2 token balance of ERC1155 is 5
+      // Step 11: Verify User2 token balance of ERC1155 is 5
       expect(await bora1155.tokenCountOf(User2.address)).to.equal(5);
 
-      // Step 12: Verify User 2 balance is increase 1000 wei
+      // Step 12: Verify User2 balance is increase 1000 wei
       expect(await ethers.provider.getBalance(User2.address));
 
-      // Step 13: Verify User 2 token balance of ERC20 is 0
+      // Step 13: Verify User2 token balance of ERC20 is 0
       expect(await bora20.balanceOf(tbaAddress)).to.equal(0);
 
       // Step 14: Verify TBA account 1 token balance of ERC721 is 0
@@ -3903,7 +4760,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.after(
-        "[User 2]",
+        "[User2]",
         "ERC20 balance:",
         await bora20.balanceOf(User2.address),
         "ERC721 balance:",
@@ -3929,7 +4786,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.before(
-        "[TBA's owner]",
+        "[TBA’s owner]",
         "ERC20 balance:",
         await bora20.balanceOf(User1.address),
         "ERC721 balance:",
@@ -3953,24 +4810,24 @@ describe("BoralabsTBA6551: Integration test", function () {
       await bora1155.tbaMint(tbaAddress, 1, "0x");
 
       // Step 4: TBA’s owner transfers 1000 wei for TBA account
-      this.mlog.log("[TBA's Owner]", "transfers 1000 wei for TBA account");
+      this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for TBA account");
       await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
 
-      // Step 5: TBA account 1 call execute() to transfer 10 tokens to TBA's owner
+      // Step 5: TBA account 1 call execute() to transfer 10 tokens to TBA’s owner
       this.mlog.log(
         "[TBA Account 1]",
-        "call execute() to transfer 10 tokens to TBA's owner"
+        "call execute() to transfer 10 tokens to TBA’s owner"
       );
       data = iface1155.encodeFunctionData("transfer", [User1.address, 10]);
       await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
 
-      // Step 6: TBA account 1 call execute() to transfer 3 tokens to TBA's owner
+      // Step 6: TBA account 1 call execute() to transfer 3 tokens to TBA’s owner
       this.mlog.log(
         "[TBA Account 1]",
-        "call execute() to transfer 3 tokens to TBA's owner"
+        "call execute() to transfer 3 tokens to TBA’s owner"
       );
       data = iface1155.encodeFunctionData("transferFrom", [
         tbaAddress,
@@ -3991,10 +4848,10 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
 
-      // Step 7: TBA account 1 call execute() to transfer 5 tokens to TBA's owner
+      // Step 7: TBA account 1 call execute() to transfer 5 tokens to TBA’s owner
       this.mlog.log(
         "[TBA Account 1]",
-        "call execute() to transfer 5 tokens to TBA's owner"
+        "call execute() to transfer 5 tokens to TBA’s owner"
       );
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
@@ -4037,30 +4894,30 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
 
-      // Step 8: TBA account 1 call transferCoin() to transfer 1000 wei to TBA's owner
+      // Step 8: TBA account 1 call transferCoin() to transfer 1000 wei to TBA’s owner
       this.mlog.log(
         "[TBA Account 1]",
-        "call transferCoin() to transfer 1000 wei to TBA's owner"
+        "call transferCoin() to transfer 1000 wei to TBA’s owner"
       );
-      data = iface1155.encodeFunctionData("transferCoin", [
+      data = ifaceAccount.encodeFunctionData("transferCoin", [
         User1.address,
         amount,
       ]);
       await tba.connect(User1).execute(User1.address, 1000, data, 0);
 
-      // Step 9: Verify TBA's owner token balance of ERC20 is 10
+      // Step 9: Verify TBA’s owner token balance of ERC20 is 10
       expect(await bora20.balanceOf(User1.address)).to.equal(10);
 
-      // Step 10: Verify TBA's owner token balance of ERC721 is 3
+      // Step 10: Verify TBA’s owner token balance of ERC721 is 3
       expect(await bora721.balanceOf(User1.address)).to.equal(6);
 
-      // Step 11: Verify TBA's owner token balance of ERC1155 is 5
+      // Step 11: Verify TBA’s owner token balance of ERC1155 is 5
       expect(await bora1155.tokenCountOf(User1.address)).to.equal(5);
 
       // Step 12: Verify TBA owner balance is increase 1000 wei
       expect(await ethers.provider.getBalance(User2.address));
 
-      // Step 13: Verify User 2 token balance of ERC20 is 0
+      // Step 13: Verify User2 token balance of ERC20 is 0
       expect(await bora20.balanceOf(tbaAddress)).to.equal(0);
 
       // Step 14: Verify TBA account 1 token balance of ERC721 is 0
@@ -4085,7 +4942,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       this.mlog.after(
-        "[TBA's owner]",
+        "[TBA’s owner]",
         "ERC20 balance:",
         await bora20.balanceOf(User1.address),
         "ERC721 balance:",
@@ -4297,7 +5154,7 @@ describe("BoralabsTBA6551: Integration test", function () {
     });
 
     it("Should successfully when transfers 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei to another TBA with different TBA’s owner via execute()", async function () {
-      // Step 1: User 2 creates a TBA account 2 with tokenId 10000002
+      // Step 1: User2 creates a TBA account 2 with tokenId 10000002
       await bora6551Registry
         .connect(User2)
         .createAccount(
