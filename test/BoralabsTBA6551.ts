@@ -57,8 +57,12 @@ describe("BoralabsTBA6551: Integration test", function () {
   ]);
 
   const iface1155 = new Interface([
-    "function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)",
+    "function safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes data)",
+    "function burn(uint256 id, uint256 amount)",
     "function setApprovalForAll(address operator, bool approved)",
+    "function transferCoin(address to, uint256 amount)",
+    "function transfer(address to, uint256 amount)",
+    "function transferFrom(address from, address to, uint256 tokenId)",
   ]);
 
   beforeEach(async function () {
@@ -1717,20 +1721,19 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       await bora721.tbaMint(tbaAddress);
 
-      const iface = new Interface(["function burn(uint256 tokenId)"]);
       // Step 2: TBA account calls execute() to burn token id 10000002
       this.mlog.log("[TBA Account]", "burn token id 10000002");
-      let data = iface.encodeFunctionData("burn", [10000002]);
+      data = iface1155.encodeFunctionData("burn", [10000002]);
       await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
 
       // Step 3: TBA account calls execute() to burn token id 20000002
       this.mlog.log("[TBA Account]", "burn token id 20000002");
-      data = iface.encodeFunctionData("burn", [20000002]);
+      data = iface1155.encodeFunctionData("burn", [20000002]);
       await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
 
       // Step 4: TBA account calls execute() to burn token id 30000002
       this.mlog.log("[TBA Account]", "burn token id 30000002");
-      data = iface.encodeFunctionData("burn", [30000002]);
+      data = iface1155.encodeFunctionData("burn", [30000002]);
       await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
 
       // Step 5: Verify token balance of TBA account is 0
@@ -1740,6 +1743,974 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "balance:",
         await bora721.balanceOf(tbaAddress)
+      );
+    });
+  });
+
+  describe("ERC1155 Receive Ability", async function () {
+    const amount = BigInt(10);
+    it("Should successfully when mint multiple time ERC1155", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens (10000002, 20000002, 30000002, 40000002 and 50000002) with an amount of 10 for TBA account
+      this.mlog.log(
+        "[TBA Account]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 2: Owner of ERC1155 mint tokens (10000003, 20000003, 30000003, 40000003 and 50000003) with an amount of 10 for TBA account
+      this.mlog.log(
+        "[TBA Account]",
+        "mint tokens (10000002, 20000002, 30000002, 40000002 and 50000002) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 3: Owner of ERC1155 mint tokens (10000004, 20000004, 30000004, 40000004 and 50000004) with an amount of 10 for TBA account
+      this.mlog.log(
+        "[TBA Account]",
+        "mint tokens (10000003, 20000003, 30000003, 40000003 and 50000003) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 4: Verify token balance of TBA account is 150
+      await expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(
+        150
+      );
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+    });
+
+    it("Should successfully when transfer multiple time ERC1155 from TBA’s owner", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[TBA's Owner]",
+        "balance:",
+        (await bora1155.tokenCountOf(User1.address)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA’s owner.
+      this.mlog.log(
+        "[TBA's Owner]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(User1.address, amount, "0x");
+
+      // Step 2: TBA’ owner transfer token id 10000002 with an amount of 10 to TBA account
+      this.mlog.log(
+        "[TBA's Owner]",
+        "transfer token id 10000001 with an amount of 10 to TBA account"
+      );
+      await bora1155
+        .connect(User1)
+        .safeTransferFrom(User1.address, tbaAddress, 10000001, amount, "0x");
+
+      // Step 3: TBA’ owner transfer token id 20000002 with an amount of 10 to TBA account
+      this.mlog.log(
+        "[TBA's Owner]",
+        "transfer token id 20000001 with an amount of 10 to TBA account"
+      );
+      await bora1155
+        .connect(User1)
+        .safeTransferFrom(User1.address, tbaAddress, 20000001, amount, "0x");
+
+      // Step 4: TBA’ owner transfer token id 30000002 with an amount of 10 to TBA account
+      this.mlog.log(
+        "[TBA's Owner]",
+        "transfer token id 30000001 with an amount of 10 to TBA account"
+      );
+      await bora1155
+        .connect(User1)
+        .safeTransferFrom(User1.address, tbaAddress, 30000001, amount, "0x");
+
+      // Step 5: Verify token balance of TBA account is 30
+      await expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(
+        30
+      );
+
+      // Step 6: Verify token balance of TBA’s owner is 20
+      await expect(
+        (await bora1155.tokenCountOf(User1.address)) * amount
+      ).to.equal(20);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.after(
+        "[TBA's Owner]",
+        "balance:",
+        (await bora1155.tokenCountOf(User1.address)) * amount
+      );
+    });
+
+    it("Should successfully when transfer multiple time ERC1155 from another account", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[User2]",
+        "balance:",
+        (await bora1155.tokenCountOf(User2.address)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens (10000002, 20000002, 30000002, 40000002 and 50000002) with an amount of 10 for User 2
+      this.mlog.log(
+        "[User 2]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(User2.address, amount, "0x");
+
+      // Step 2: User 2 transfer token id 10000002 with an amount of 10 to TBA account
+      this.mlog.log(
+        "[User 2]",
+        "transfer token id 10000001 with an amount of 10 to TBA account"
+      );
+      await bora1155
+        .connect(User2)
+        .safeTransferFrom(User2.address, tbaAddress, 10000001, amount, "0x");
+
+      // Step 3: TBA’ owner transfer token id 20000002 with an amount of 10 to TBA account
+      this.mlog.log(
+        "[User 2]",
+        "transfer token id 20000001 with an amount of 10 to TBA account"
+      );
+      await bora1155
+        .connect(User2)
+        .safeTransferFrom(User2.address, tbaAddress, 20000001, amount, "0x");
+
+      // Step 4: TBA’ owner transfer token id 30000002 with an amount of 10 to TBA account
+      this.mlog.log(
+        "[User 2",
+        "transfer token id 30000001 with an amount of 10 to TBA account"
+      );
+      await bora1155
+        .connect(User2)
+        .safeTransferFrom(User2.address, tbaAddress, 30000001, amount, "0x");
+
+      // Step 5: Verify token balance of TBA account is 30
+      await expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(
+        30
+      );
+
+      // Step 6: Verify token balance of TBA’s owner is 20
+      await expect(
+        (await bora1155.tokenCountOf(User2.address)) * amount
+      ).to.equal(20);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.after(
+        "[User 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(User2.address)) * amount
+      );
+    });
+  });
+
+  describe("ERC1155 Send Ability", async function () {
+    const amount = BigInt(10);
+    it("Should successfully when transfer multiple time ERC1155 to TBA’s owner", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[TBA's Owner]",
+        "balance:",
+        (await bora1155.tokenCountOf(User1.address)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account
+      this.mlog.log(
+        "[TBA Account]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 2: TBA call transfer1155() to transfer token id 10000001 with an amount of 10 to TBA’s owner
+      this.mlog.log(
+        "[TBA Account]",
+        "call transfer1155() to transfer token id 10000001 with an amount of 10 to TBA’s owner"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, User1.address, 10000001, amount, "0x");
+
+      // Step 3: TBA call transfer1155() to transfer token id 20000001 with an amount of 10 to TBA’s owner
+      this.mlog.log(
+        "[TBA Account]",
+        "call transfer1155() to transfer token id 20000001 with an amount of 10 to TBA’s owner"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, User1.address, 20000001, amount, "0x");
+
+      // Step 4: TBA call transfer1155() to transfer token id 10000001 with an amount of 10 to TBA’s owner
+      this.mlog.log(
+        "[TBA Account]",
+        "call transfer1155() to transfer token id 30000001 with an amount of 10 to TBA’s owner"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, User1.address, 30000001, amount, "0x");
+
+      // Step 5: Verify token balance of TBA account is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      // Step 6: Verify token balance of TBA’s owner is 30
+      expect((await bora1155.tokenCountOf(User1.address)) * amount).to.equal(
+        30
+      );
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+      this.mlog.after(
+        "[TBA's Owner]",
+        "balance:",
+        (await bora1155.tokenCountOf(User1.address)) * amount
+      );
+    });
+
+    it("Should successfully when transfer multiple time ERC1155 to another account", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[User 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(User2.address)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account
+      this.mlog.log(
+        "[TBA Account]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 2: TBA call transfer1155() to transfer token id 10000001 with an amount of 10 to User 2
+      this.mlog.log(
+        "[TBA Account]",
+        "call transfer1155() to transfer token id 10000001 with an amount of 10 to User 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, User2.address, 10000001, amount, "0x");
+
+      // Step 3: TBA call transfer1155() to transfer token id 20000001 with an amount of 10 to User 2
+      this.mlog.log(
+        "[TBA Account]",
+        "call transfer1155() to transfer token id 20000001 with an amount of 10 to User 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, User2.address, 20000001, amount, "0x");
+
+      // Step 4: TBA call transfer1155() to transfer token id 10000001 with an amount of 10 to User 2
+      this.mlog.log(
+        "[TBA Account]",
+        "call transfer1155() to transfer token id 10000001 with an amount of 10 to User 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, User2.address, 30000001, amount, "0x");
+
+      // Step 5: Verify token balance of TBA account is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      // Step 6: Verify token balance of User 2 is 30
+      expect((await bora1155.tokenCountOf(User2.address)) * amount).to.equal(
+        30
+      );
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+      this.mlog.after(
+        "[User 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(User2.address)) * amount
+      );
+    });
+
+    it("Should successfully when transfer multiple time ERC1155 to another TBA with same TBA’s owner", async function () {
+      // Step 1: User 1 creates a TBA account 2 with tokenId 20000001
+      await bora6551Registry
+        .connect(User1)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          20000001,
+          0,
+          "0x"
+        );
+
+      // Get TBA account 2 address
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        20000001,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[TBA account 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress2)) * amount
+      );
+
+      // Step 2: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
+      this.mlog.log(
+        "[TBA Account 1]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 3: Account 1 calls transfer1155() to transfer token id 10000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls transfer1155() to transfer token id 10000001 with an amount of 10 to Account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, tbaAddress2, 10000001, amount, "0x");
+
+      // Step 4: Account 1 calls transfer1155() to transfer token id 20000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls transfer1155() to transfer token id 20000001 with an amount of 10 to Account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, tbaAddress2, 20000001, amount, "0x");
+
+      // Step 5: Account 1 calls transfer1155() to transfer token id 30000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls transfer1155() to transfer token id 30000001 with an amount of 10 to Account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, tbaAddress2, 30000001, amount, "0x");
+
+      // Step 6: Verify token balance of TBA account 1 is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      // Step 7: Verify token balance of TBA account 2 is 30
+      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.equal(30);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress2)) * amount
+      );
+    });
+
+    it("Should successfully when transfer multiple time ERC1155 to another TBA with different TBA’s owner", async function () {
+      // Step 1: User 2 creates a TBA account 2 with tokenId 10000002
+      await bora721.tbaMint(User2.address);
+      await bora6551Registry
+        .connect(User2)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          10000002,
+          0,
+          "0x"
+        );
+
+      // Get TBA account 2 address
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        10000002,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[TBA account 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress2)) * amount
+      );
+
+      // Step 2: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
+      this.mlog.log(
+        "[TBA Account 1]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 3: Account 1 calls transfer1155() to transfer token id 10000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls transfer1155() to transfer token id 10000001 with an amount of 10 to Account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, tbaAddress2, 10000001, amount, "0x");
+
+      // Step 4: Account 1 calls transfer1155() to transfer token id 20000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls transfer1155() to transfer token id 20000001 with an amount of 10 to Account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, tbaAddress2, 20000001, amount, "0x");
+
+      // Step 5: Account 1 calls transfer1155() to transfer token id 30000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls transfer1155() to transfer token id 30000001 with an amount of 10 to Account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(bora1155.target, tbaAddress2, 30000001, amount, "0x");
+
+      // Step 6: Verify token balance of TBA account 1 is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      // Step 7: Verify token balance of TBA account 2 is 30
+      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.equal(30);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress2)) * amount
+      );
+    });
+
+    it("Should successfully when transfers multiple time ERC1155 to another account via execute()", async function () {
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[User 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(User2.address)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens  (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
+      this.mlog.log(
+        "[TBA Account 1]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 2: Account 1 calls execute() to transfer token id 10000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 10000001 with an amount of 10 to Account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User2.address,
+        10000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 3: Account 1 calls execute() to transfer token id 20000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 20000001 with an amount of 10 to Account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User2.address,
+        20000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 4: Account 1 calls execute() to transfer token id 30000001 with an amount of 10 to Account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 30000001 with an amount of 10 to Account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User2.address,
+        30000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 5: Verify token balance of TBA account is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      // Step 6: Verify token balance of User 2 is 30
+      expect((await bora1155.tokenCountOf(User2)) * amount).to.equal(30);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+      this.mlog.after(
+        "[User 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(User2)) * amount
+      );
+    });
+
+    it("Should successfully when transfers multiple time ERC1155 to TBA’s owner via execute()", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[TBA's Owner]",
+        "balance:",
+        (await bora1155.tokenCountOf(User1.address)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens  (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
+      this.mlog.log(
+        "[TBA Account 1]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 2: Account 1 calls execute() to transfer token id 10000001 with an amount of 10 to TBA’s owner
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 10000001 with an amount of 10 to Account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User1.address,
+        10000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 3: Account 1 calls execute() to transfer token id 20000001 with an amount of 10 to TBA’s owner
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 20000001 with an amount of 10 to Account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User1.address,
+        20000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 4: Account 1 calls execute() to transfer token id 30000001 with an amount of 10 to TBA’s owner
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 30000001 with an amount of 10 to Account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User1.address,
+        30000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 5: Verify token balance of TBA account is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      // Step 6: Verify token balance of TBA’s owner is 30
+      expect((await bora1155.tokenCountOf(User1.address)) * amount).to.equal(
+        30
+      );
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+      this.mlog.after(
+        "[TBA's Owner]",
+        "balance:",
+        (await bora1155.tokenCountOf(User1.address)) * amount
+      );
+    });
+
+    it("Should successfully when transfers multiple time ERC1155 to another TBA with same TBA’s owner via execute()", async function () {
+      // Step 1: User 1 creates a TBA account 2 with tokenId 20000001
+      await bora6551Registry
+        .connect(User1)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          20000001,
+          0,
+          "0x"
+        );
+
+      // Get TBA account 2 address
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        20000001,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA Account 2]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress2)
+      );
+
+      // Step 2: Owner of ERC1155 mint tokens  (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
+      this.mlog.log(
+        "[TBA Account 1]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 3: Account 1 calls execute() to transfer token id 10000001 with an amount of 10 to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 10000001 with an amount of 10 to TBA account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        tbaAddress2,
+        10000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 4: Account 1 calls execute() to transfer token id 20000001 with an amount of 10 to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 20000001 with an amount of 10 to TBA account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        tbaAddress2,
+        20000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 5: Account 1 calls execute() to transfer token id 30000001 with an amount of 10 to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 30000001 with an amount of 10 to TBA account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        tbaAddress2,
+        30000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 6: Verify token balance of TBA account 1 is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      // Step 7: Verify token balance of TBA account 2 is 30
+      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.equal(30);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress2)) * amount
+      );
+    });
+
+    it("Should successfully when transfers multiple time ERC1155 to another TBA with different TBA’s owner via execute()", async function () {
+      // Step 1: User 2 creates a TBA account 2 with tokenId 10000002.
+      await bora721.tbaMint(User2.address);
+      await bora6551Registry
+        .connect(User2)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          10000002,
+          0,
+          "0x"
+        );
+
+      // Get TBA account 2 address
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        10000002,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      this.mlog.before(
+        "[TBA Account 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress2)) * amount
+      );
+
+      // Step 2: Owner of ERC1155 mint tokens  (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
+      this.mlog.log(
+        "[TBA Account 1]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Step 3: Account 1 calls execute() to transfer token id 10000001 with an amount of 10 to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 10000001 with an amount of 10 to TBA account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        tbaAddress2,
+        10000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 4: Account 1 calls execute() to transfer token id 20000001 with an amount of 10 to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 20000001 with an amount of 10 to TBA account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        tbaAddress2,
+        20000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 5: Account 1 calls execute() to transfer token id 30000001 with an amount of 10 to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to transfer token id 30000001 with an amount of 10 to TBA account 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        tbaAddress2,
+        30000001,
+        amount,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 6: Verify token balance of TBA account 1 is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      // Step 7: Verify token balance of TBA account 2 is 30
+      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.equal(30);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress2)) * amount
+      );
+    });
+  });
+
+  describe("ERC1155 Burn Ability", async function () {
+    let amount = BigInt(10);
+    it("Should successfully when burn multiple time ERC1155 by Owner 1155", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
+      this.mlog.log(
+        "[TBA Account]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Approval for all
+      data = iface1155.encodeFunctionData("setApprovalForAll", [
+        owner1155.address,
+        true,
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 2: TBA account calls burn() to burn token id 10000001 with an amount of 10
+      this.mlog.log(
+        "[Owner 1155]",
+        "calls burn() to burn token id 10000001 with an amount of 10"
+      );
+      await bora1155.burn(10000001, amount);
+
+      // Step 3: TBA account calls burn() to burn token id 20000001 with an amount of 10
+      this.mlog.log(
+        "[Owner 1155]",
+        "calls burn() to burn token id 20000001 with an amount of 10"
+      );
+      await bora1155.burn(20000001, amount);
+
+      // Step 4: TBA account calls burn() to burn token id 30000001 with an amount of 10
+      this.mlog.log(
+        "[Owner 1155]",
+        "calls burn() to burn token id 30000001 with an amount of 10"
+      );
+      await bora1155.burn(30000001, amount);
+
+      // Step 5: Verify token balance of TBA account is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+    });
+
+    it("Should successfully when burn multiple time ERC1155 via execute()", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      );
+
+      // Step 1: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
+      this.mlog.log(
+        "[TBA Account]",
+        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, "0x");
+
+      // Approval for all
+      let approveData = iface1155.encodeFunctionData("setApprovalForAll", [
+        User1.address,
+        true,
+      ]);
+      await tba.connect(User1).execute(bora1155.target, 0, approveData, 0);
+
+      // Step 2: TBA account calls execute() to burn token id 10000001 with an amount of 10
+      this.mlog.log(
+        "[TBA Account]",
+        "calls execute() to burn token id 10000001 with an amount of 10"
+      );
+      data = iface1155.encodeFunctionData("burn", [10000001, amount]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 3: TBA account calls execute() to burn token id 20000001 with an amount of 10
+      this.mlog.log(
+        "[TBA Account]",
+        "calls execute() to burn token id 20000001 with an amount of 10"
+      );
+      data = iface1155.encodeFunctionData("burn", [20000001, amount]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 4: TBA account calls execute() to burn token id 30000001 with an amount of 10
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls execute() to burn token id 30000001 with an amount of 10"
+      );
+      data = iface1155.encodeFunctionData("burn", [30000001, amount]);
+      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
+
+      // Step 5: Verify token balance of TBA account is 20
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.equal(20);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
       );
     });
   });
@@ -2365,6 +3336,767 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
     });
 
+    let amount = BigInt(10);
+    it("Should successfully when transfer 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei to another TBA with same TBA’s owner", async function () {
+      // Step 1: User 1 creates a TBA account 2 with tokenId 20000001
+      await bora6551Registry
+        .connect(User1)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          20000001,
+          0,
+          "0x"
+        );
+
+      // Get TBA account 2 address
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        20000001,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA Account 2]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress2),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress2),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress2),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      // Step 2: Owner of ERC20 mint 10 tokens for Account 1.
+      this.mlog.log("[TBA Account 1]", "mint 10 tokens ERC20");
+      await bora20.mint(tbaAddress, 10);
+
+      // Step 3: Owner of ERC721 mint 3 tokens for Account 1
+      this.mlog.log("[TBA Account 1]", "mint 3 tokens ERC721");
+      await bora721.tbaMint(tbaAddress);
+
+      // Step 4: Owner of ERC1155 mint 5 tokens for Account 1
+      this.mlog.log("[TBA Account 1]", "mint 5 tokens ERC1155");
+      await bora1155.tbaMint(tbaAddress, 1, "0x");
+
+      // Step 5: TBA’s owner transfers 1000 wei for Account 1
+      this.mlog.log("[TBA's Owner]", "transfers 1000 wei for Account 1");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 6: TBA account 1 call transfer20() to transfer 10 tokens to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transfer20() to transfer 10 tokens to TBA account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer20(await bora20.getAddress(), tbaAddress2, 10);
+
+      // Step 7: TBA account 1 call transfer721() to transfer 3 tokens to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transfer721() to transfer 3 tokens to TBA account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer721(await bora721.getAddress(), tbaAddress2, 10000002);
+      await tba
+        .connect(User1)
+        .transfer721(await bora721.getAddress(), tbaAddress2, 20000002);
+      await tba
+        .connect(User1)
+        .transfer721(await bora721.getAddress(), tbaAddress2, 30000002);
+
+      // Step 8: TBA account 1 call transfer1155() to transfer 5 tokens to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transfer1155() to transfer 5 tokens to TBA account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          10000001,
+          1,
+          "0x"
+        );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          20000001,
+          1,
+          "0x"
+        );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          30000001,
+          1,
+          "0x"
+        );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          40000001,
+          1,
+          "0x"
+        );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          50000001,
+          1,
+          "0x"
+        );
+
+      // Step 9: TBA account 1 call transferCoin() to transfer 1000 wei to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transferCoin() to transfer 1000 wei to TBA account 2"
+      );
+      await tba.connect(User1).transferCoin(tbaAddress2, 1000);
+
+      // Step 10: Verify TBA account 2 token balance of ERC20 is 10
+      expect(await bora20.balanceOf(tbaAddress2)).to.equal(10);
+
+      // Step 11: Verify TBA account 2 token balance of ERC721 is 3
+      expect(await bora721.balanceOf(tbaAddress2)).to.equal(3);
+
+      // Step 12: Verify TBA account 2 token balance of ERC1155 is 5
+      expect(await bora1155.tokenCountOf(tbaAddress2)).to.equal(5);
+
+      // Step 13: Verify TBA account 2 balance is increase 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress2)).to.equal(1000);
+
+      // Step 14: Verify TBA account 1 token balance of ERC20 is 0
+      expect(await bora20.balanceOf(tbaAddress)).to.equal(0);
+
+      // Step 15: Verify TBA account 1 token balance of ERC721 is 0
+      expect(await bora721.balanceOf(tbaAddress)).to.equal(0);
+
+      // Step 16: Verify TBA account 1 token balance of ERC1155 is 0
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.equal(0);
+
+      // Step 17: Verify TBA account 1 balance is decrease 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(0);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA Account 2]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress2),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress2),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress2),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+    });
+
+    it("Should successfully when transfer 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei to another TBA with different TBA’s owner", async function () {
+      // Step 1: User 2 creates a TBA account 2 with tokenId 10000002.
+      await bora721.tbaMint(User2.address);
+      await bora6551Registry
+        .connect(User2)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          10000002,
+          0,
+          "0x"
+        );
+
+      // Get TBA account 2 address
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        10000002,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA Account 2]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress2),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress2),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress2),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+
+      // Step 2: Owner of ERC20 mint 10 tokens for Account 1.
+      this.mlog.log("[TBA Account 1]", "mint 10 tokens ERC20");
+      await bora20.mint(tbaAddress, 10);
+
+      // Step 3: Owner of ERC721 mint 3 tokens for Account 1
+      this.mlog.log("[TBA Account 1]", "mint 3 tokens ERC721");
+      await bora721.tbaMint(tbaAddress);
+
+      // Step 4: Owner of ERC1155 mint 5 tokens for Account 1
+      this.mlog.log("[TBA Account 1]", "mint 5 tokens ERC1155");
+      await bora1155.tbaMint(tbaAddress, 1, "0x");
+
+      // Step 5: TBA’s owner transfers 1000 wei for Account 1
+      this.mlog.log("[TBA's Owner]", "transfers 1000 wei for Account 1");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 6: TBA account 1 call transfer20() to transfer 10 tokens to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transfer20() to transfer 10 tokens to TBA account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer20(await bora20.getAddress(), tbaAddress2, 10);
+
+      // Step 7: TBA account 1 call transfer721() to transfer 3 tokens to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transfer721() to transfer 3 tokens to TBA account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer721(await bora721.getAddress(), tbaAddress2, 10000003);
+      await tba
+        .connect(User1)
+        .transfer721(await bora721.getAddress(), tbaAddress2, 20000003);
+      await tba
+        .connect(User1)
+        .transfer721(await bora721.getAddress(), tbaAddress2, 30000003);
+
+      // Step 8: TBA account 1 call transfer1155() to transfer 5 tokens to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transfer1155() to transfer 5 tokens to TBA account 2"
+      );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          10000001,
+          1,
+          "0x"
+        );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          20000001,
+          1,
+          "0x"
+        );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          30000001,
+          1,
+          "0x"
+        );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          40000001,
+          1,
+          "0x"
+        );
+      await tba
+        .connect(User1)
+        .transfer1155(
+          await bora1155.getAddress(),
+          tbaAddress2,
+          50000001,
+          1,
+          "0x"
+        );
+
+      // Step 9: TBA account 1 call transferCoin() to transfer 1000 wei to TBA account 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transferCoin() to transfer 1000 wei to TBA account 2"
+      );
+      await tba.connect(User1).transferCoin(tbaAddress2, 1000);
+
+      // Step 10: Verify TBA account 2 token balance of ERC20 is 10
+      expect(await bora20.balanceOf(tbaAddress2)).to.equal(10);
+
+      // Step 11: Verify TBA account 2 token balance of ERC721 is 3
+      expect(await bora721.balanceOf(tbaAddress2)).to.equal(3);
+
+      // Step 12: Verify TBA account 2 token balance of ERC1155 is 5
+      expect(await bora1155.tokenCountOf(tbaAddress2)).to.equal(5);
+
+      // Step 13: Verify TBA account 2 balance is increase 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress2)).to.equal(1000);
+
+      // Step 14: Verify TBA account 1 token balance of ERC20 is 0
+      expect(await bora20.balanceOf(tbaAddress)).to.equal(0);
+
+      // Step 15: Verify TBA account 1 token balance of ERC721 is 0
+      expect(await bora721.balanceOf(tbaAddress)).to.equal(0);
+
+      // Step 16: Verify TBA account 1 token balance of ERC1155 is 0
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.equal(0);
+
+      // Step 17: Verify TBA account 1 balance is decrease 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(0);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA Account 2]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress2),
+
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress2),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress2),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress2)
+      );
+    });
+
+    it("Should successfully when transfers 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei to another account via execute()", async function () {
+      this.mlog.before(
+        "[TBA Account 1]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[User 2]",
+        "ERC20 balance:",
+        await bora20.balanceOf(User2.address),
+        "ERC721 balance:",
+        await bora721.balanceOf(User2.address),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(User2.address),
+        "Native token balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+
+      // Step 1: Owner of ERC20 mint 10 tokens for TBA account
+      this.mlog.log("[TBA Account 1]", "mint 10 tokens ERC20");
+      await bora20.mint(tbaAddress, 10);
+
+      // Step 2: Owner of ERC721 mint 3 tokens for TBA account
+      this.mlog.log("[TBA Account 1]", "mint 3 tokens ERC721");
+      await bora721.tbaMint(tbaAddress);
+
+      // Step 3: Owner of ERC1155 mint 5 tokens for TBA account
+      this.mlog.log("[TBA Account 1]", "mint 5 tokens ERC1155");
+      await bora1155.tbaMint(tbaAddress, 1, "0x");
+
+      // Step 4: TBA’s owner transfers 1000 wei for TBA account
+      this.mlog.log("[TBA's Owner]", "transfers 1000 wei for Accoun");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 5: TBA call execute() to transfer 10 tokens to User 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to transfer 10 tokens to User 2"
+      );
+      data = iface1155.encodeFunctionData("transfer", [User2.address, 10]);
+      await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
+
+      // Step 6: TBA call execute() to transfer 3 tokens to User 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to transfer 3 tokens to User 2"
+      );
+      data = iface1155.encodeFunctionData("transferFrom", [
+        tbaAddress,
+        User2.address,
+        10000002,
+      ]);
+      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("transferFrom", [
+        tbaAddress,
+        User2.address,
+        20000002,
+      ]);
+      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("transferFrom", [
+        tbaAddress,
+        User2.address,
+        30000002,
+      ]);
+      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+
+      // Step 7: TBA call execute() to transfer 5 tokens to User 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to transfer 5 tokens to User 2"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User2.address,
+        10000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User2.address,
+        20000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User2.address,
+        30000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User2.address,
+        40000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      let data1155Token5 = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User2.address,
+        50000001,
+        1,
+        "0x",
+      ]);
+      await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data1155Token5, 0);
+
+      // Step 8: TBA call execute() to transfer 1000 wei to User 2
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transferCoin() to transfer 1000 wei to User 2"
+      );
+      data = iface1155.encodeFunctionData("transferCoin", [
+        User2.address,
+        amount,
+      ]);
+      await tba.connect(User1).execute(User2.address, 1000, data, 0);
+
+      // Step 9: Verify User 2 token balance of ERC20 is 10
+      expect(await bora20.balanceOf(User2.address)).to.equal(10);
+
+      // Step 10: Verify User 2 token balance of ERC721 is 3
+      expect(await bora721.balanceOf(User2.address)).to.equal(3);
+
+      // Step 11: Verify User 2 token balance of ERC1155 is 5
+      expect(await bora1155.tokenCountOf(User2.address)).to.equal(5);
+
+      // Step 12: Verify User 2 balance is increase 1000 wei
+      expect(await ethers.provider.getBalance(User2.address));
+
+      // Step 13: Verify User 2 token balance of ERC20 is 0
+      expect(await bora20.balanceOf(tbaAddress)).to.equal(0);
+
+      // Step 14: Verify TBA account 1 token balance of ERC721 is 0
+      expect(await bora721.balanceOf(tbaAddress)).to.equal(0);
+
+      // Step 15: Verify TBA account 1 token balance of ERC1155 is 0
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.equal(0);
+
+      // Step 16: Verify TBA account 1 balance is decrease 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(0);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[User 2]",
+        "ERC20 balance:",
+        await bora20.balanceOf(User2.address),
+        "ERC721 balance:",
+        await bora721.balanceOf(User2.address),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(User2.address),
+        "Native token balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+    });
+
+    it("Should successfully when transfers 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei to TBA’s owner via execute()", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.before(
+        "[TBA's owner]",
+        "ERC20 balance:",
+        await bora20.balanceOf(User1.address),
+        "ERC721 balance:",
+        await bora721.balanceOf(User1.address),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(User1.address),
+        "Native token balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+
+      // Step 1: Owner of ERC20 mint 10 tokens for TBA account
+      this.mlog.log("[TBA Account]", "mint 10 tokens ERC20");
+      await bora20.mint(tbaAddress, 10);
+
+      // Step 2: Owner of ERC721 mint 3 tokens for TBA account
+      this.mlog.log("[TBA Account]", "mint 3 tokens ERC721");
+      await bora721.tbaMint(tbaAddress);
+
+      // Step 3: Owner of ERC1155 mint 5 tokens for TBA account
+      this.mlog.log("[TBA Account]", "mint 5 tokens ERC1155");
+      await bora1155.tbaMint(tbaAddress, 1, "0x");
+
+      // Step 4: TBA’s owner transfers 1000 wei for TBA account
+      this.mlog.log("[TBA's Owner]", "transfers 1000 wei for TBA account");
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+
+      // Step 5: TBA account 1 call execute() to transfer 10 tokens to TBA's owner
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to transfer 10 tokens to TBA's owner"
+      );
+      data = iface1155.encodeFunctionData("transfer", [User1.address, 10]);
+      await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
+
+      // Step 6: TBA account 1 call execute() to transfer 3 tokens to TBA's owner
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to transfer 3 tokens to TBA's owner"
+      );
+      data = iface1155.encodeFunctionData("transferFrom", [
+        tbaAddress,
+        User1.address,
+        10000002,
+      ]);
+      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("transferFrom", [
+        tbaAddress,
+        User1.address,
+        20000002,
+      ]);
+      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("transferFrom", [
+        tbaAddress,
+        User1.address,
+        30000002,
+      ]);
+      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+
+      // Step 7: TBA account 1 call execute() to transfer 5 tokens to TBA's owner
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call execute() to transfer 5 tokens to TBA's owner"
+      );
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User1.address,
+        10000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User1.address,
+        20000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User1.address,
+        30000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User1.address,
+        40000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      data = iface1155.encodeFunctionData("safeTransferFrom", [
+        tbaAddress,
+        User1.address,
+        50000001,
+        1,
+        "0x",
+      ]);
+      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+
+      // Step 8: TBA account 1 call transferCoin() to transfer 1000 wei to TBA's owner
+      this.mlog.log(
+        "[TBA Account 1]",
+        "call transferCoin() to transfer 1000 wei to TBA's owner"
+      );
+      data = iface1155.encodeFunctionData("transferCoin", [
+        User1.address,
+        amount,
+      ]);
+      await tba.connect(User1).execute(User1.address, 1000, data, 0);
+
+      // Step 9: Verify TBA's owner token balance of ERC20 is 10
+      expect(await bora20.balanceOf(User1.address)).to.equal(10);
+
+      // Step 10: Verify TBA's owner token balance of ERC721 is 3
+      expect(await bora721.balanceOf(User1.address)).to.equal(6);
+
+      // Step 11: Verify TBA's owner token balance of ERC1155 is 5
+      expect(await bora1155.tokenCountOf(User1.address)).to.equal(5);
+
+      // Step 12: Verify TBA owner balance is increase 1000 wei
+      expect(await ethers.provider.getBalance(User2.address));
+
+      // Step 13: Verify User 2 token balance of ERC20 is 0
+      expect(await bora20.balanceOf(tbaAddress)).to.equal(0);
+
+      // Step 14: Verify TBA account 1 token balance of ERC721 is 0
+      expect(await bora721.balanceOf(tbaAddress)).to.equal(0);
+
+      // Step 15: Verify TBA account 1 token balance of ERC1155 is 0
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.equal(0);
+
+      // Step 16: Verify TBA account 1 balance is decrease 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.equal(0);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "ERC20 balance:",
+        await bora20.balanceOf(tbaAddress),
+        "ERC721 balance:",
+        await bora721.balanceOf(tbaAddress),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(tbaAddress),
+        "Native token balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      this.mlog.after(
+        "[TBA's owner]",
+        "ERC20 balance:",
+        await bora20.balanceOf(User1.address),
+        "ERC721 balance:",
+        await bora721.balanceOf(User1.address),
+        "ERC1155 balance:",
+        await bora1155.tokenCountOf(User1.address),
+        "Native token balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+    });
+
     it("Should successfully when transfers 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei to another TBA with same TBA’s owner via execute()", async function () {
       // Step 1: User 1 creates a TBA account 2 with tokenId 20000001
       await bora6551Registry
@@ -2391,13 +4123,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 1]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress)
       );
@@ -2406,13 +4135,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 2]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress2),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress2),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress2),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress2)
       );
@@ -2441,7 +4167,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 1]",
         "call execute() to transfer 10 tokens to Account 2"
       );
-      let data = iface20.encodeFunctionData("transfer", [tbaAddress2, 10]);
+      data = iface20.encodeFunctionData("transfer", [tbaAddress2, 10]);
       await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
 
       // Step 7: Account 1 call execute() to transfer 3 tokens to Account 2
@@ -2549,13 +4275,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 1]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress)
       );
@@ -2564,13 +4287,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 2]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress2),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress2),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress2),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress2)
       );
@@ -2602,13 +4322,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 1]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress)
       );
@@ -2617,13 +4334,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 2]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress2),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress2),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress2),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress2)
       );
@@ -2652,7 +4366,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 1]",
         "call execute() to transfer 10 tokens to Account 2"
       );
-      let data = iface20.encodeFunctionData("transfer", [tbaAddress2, 10]);
+      data = iface20.encodeFunctionData("transfer", [tbaAddress2, 10]);
       await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
 
       // Step 7: Account 1 call execute() to transfer 3 tokens to Account 2
@@ -2760,13 +4474,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 1]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress)
       );
@@ -2775,13 +4486,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account 2]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress2),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress2),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress2),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress2)
       );
@@ -2794,13 +4502,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress)
       );
@@ -2829,7 +4534,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "calls BoralabsTBA20.burn() to burn 10 tokens"
       );
-      let data = iface20.encodeFunctionData("approve", [owner20.address, 10]);
+      data = iface20.encodeFunctionData("approve", [owner20.address, 10]);
       await tba.connect(User1).execute(bora20.target, 0, data, 0);
       await bora20.burnFrom(tbaAddress, 10);
 
@@ -2873,13 +4578,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress)
       );
@@ -2890,13 +4592,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress)
       );
@@ -2953,13 +4652,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "ERC20 balance:",
         await bora20.balanceOf(tbaAddress),
-        "",
         "ERC721 balance:",
         await bora721.balanceOf(tbaAddress),
-        "",
         "ERC1155 balance:",
         await bora1155.tokenCountOf(tbaAddress),
-        "",
         "Native token balance:",
         await ethers.provider.getBalance(tbaAddress)
       );
