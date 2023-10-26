@@ -1726,17 +1726,17 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 2: TBA account calls execute() to burn token id 10000002
       this.mlog.log("[TBA Account]", "burn token id 10000002");
-      data = iface1155.encodeFunctionData("burn", [10000002]);
+      data = iface721.encodeFunctionData("burn", [10000002]);
       await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
 
       // Step 3: TBA account calls execute() to burn token id 20000002
       this.mlog.log("[TBA Account]", "burn token id 20000002");
-      data = iface1155.encodeFunctionData("burn", [20000002]);
+      data = iface721.encodeFunctionData("burn", [20000002]);
       await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
 
       // Step 4: TBA account calls execute() to burn token id 30000002
       this.mlog.log("[TBA Account]", "burn token id 30000002");
-      data = iface1155.encodeFunctionData("burn", [30000002]);
+      data = iface721.encodeFunctionData("burn", [30000002]);
       await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
 
       // Step 5: Verify token balance of TBA account is 0
@@ -3316,7 +3316,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         tbaAddress2,
         100,
       ]);
-      await tba.connect(User1).execute(tbaAddress2, 100, data, 0);
+      await tba.connect(User1).execute(tbaAddress, 0, data, 0);
 
       // Step 4: Account 1 calls execute() to transfer 200 wei to Account 2
       this.mlog.log(
