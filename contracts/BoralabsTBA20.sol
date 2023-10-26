@@ -66,7 +66,7 @@ contract BoralabsTBA20 is BoralabsBase, ERC20, ReentrancyGuard {
     function _burn(
         address account,
         uint256 amount
-    ) internal virtual override onlyOwner {
+    ) internal virtual override {
         super._burn(account, amount);
         emit SupplyChanged(_msgSender(), "BURN", account, amount, totalSupply());
     }

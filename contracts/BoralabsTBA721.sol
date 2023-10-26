@@ -76,6 +76,7 @@ contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard{
     function burn(
         uint256 tokenId
     ) external {
+        require(_ownerOf(tokenId) == _msgSender(), "only owner can burn");
         _burn(tokenId);
     }
 
