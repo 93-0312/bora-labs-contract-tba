@@ -41,11 +41,11 @@ export async function deployBora6551Account() {
 }
 
 export async function deployBora6551Registry() {
-  const [ownerRegister] = await ethers.getSigners();
+  const [ownerRegistry] = await ethers.getSigners();
   const bora6551Registry = await ethers.deployContract(
     "BoralabsTBA6551Registry",
     [],
-    ownerRegister
+    ownerRegistry
   );
-  return { bora6551Registry, ownerRegister };
+  return { bora6551Registry, ownerRegistry };
 }

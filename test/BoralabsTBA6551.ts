@@ -36,7 +36,7 @@ describe("BoralabsTBA6551: Integration test", function () {
   let owner721: HardhatEthersSigner;
   let owner1155: HardhatEthersSigner;
   let ownerAccount: HardhatEthersSigner;
-  let ownerRegister: HardhatEthersSigner;
+  let ownerRegistry: HardhatEthersSigner;
 
   let User1: HardhatEthersSigner;
   let User2: HardhatEthersSigner;
@@ -83,7 +83,7 @@ describe("BoralabsTBA6551: Integration test", function () {
     ));
 
     // deploy bora 6551 registry
-    ({ bora6551Registry, ownerRegister } = await loadFixture(
+    ({ bora6551Registry, ownerRegistry } = await loadFixture(
       deployBora6551Registry
     ));
 
