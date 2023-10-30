@@ -27,8 +27,6 @@ describe("BoralabsTBA6551Registry: Unit test", function () {
   let tbaAddress2: string;
 
   let User1: HardhatEthersSigner;
-  let User2: HardhatEthersSigner;
-  let User3: HardhatEthersSigner;
 
   let data: string;
 
@@ -44,7 +42,7 @@ describe("BoralabsTBA6551Registry: Unit test", function () {
     // deploy bora 6551 registry
     ({ bora6551Registry } = await loadFixture(deployBora6551Registry));
 
-    [User1, User2, User3] = await ethers.getSigners();
+    [User1] = await ethers.getSigners();
   });
 
   describe("Create Account", async function () {

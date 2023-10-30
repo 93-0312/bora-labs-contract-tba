@@ -519,7 +519,7 @@ describe("BoralabsTBA6551: Abnormal test", function () {
         ["uint256"],
         result.toString()
       )[0];
-      expect(tokenCount).to.equal(0);
+      expect(tokenCount).to.be.equal(0);
     });
   });
 });

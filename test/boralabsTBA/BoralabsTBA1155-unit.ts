@@ -144,7 +144,7 @@ describe("BoralabsTBA6551: Unit test", function () {
       ).to.deep.equal([5, 10, 10, 10, 10]);
 
       // Step 4: Verify token balance of User 2 with tokenId 10000001 is 5
-      await expect(await bora1155.balanceOf(User2.address, 10000001)).to.equal(
+      await expect(await bora1155.balanceOf(User2.address, 10000001)).to.be.equal(
         5
       );
 
@@ -240,7 +240,7 @@ describe("BoralabsTBA6551: Unit test", function () {
       ).to.deep.equal([10, 10, 10, 10, 0]);
 
       // Step 6: Verify token balance of TBA account 2 with tokenId 50000001 is 10
-      await expect(await bora1155.balanceOf(tbaAddress2, 50000001)).to.equal(
+      await expect(await bora1155.balanceOf(tbaAddress2, 50000001)).to.be.equal(
         10
       );
 
@@ -321,7 +321,7 @@ describe("BoralabsTBA6551: Unit test", function () {
       ).to.deep.equal([10, 10, 10, 10, 10]);
 
       // Step 5: Verify token balance of TBA account with tokenId (10000001) with an amount of each is 0
-      await expect(await bora1155.balanceOf(User2.address, 10000001)).to.equal(
+      await expect(await bora1155.balanceOf(User2.address, 10000001)).to.be.equal(
         0
       );
 
@@ -405,7 +405,7 @@ describe("BoralabsTBA6551: Unit test", function () {
       ).to.deep.equal([5, 10, 10, 10, 10]);
 
       // Step 5: Verify token balance of User 2 is 10000001 with amount is 5
-      await expect(await bora1155.balanceOf(User2.address, 10000001)).to.equal(
+      await expect(await bora1155.balanceOf(User2.address, 10000001)).to.be.equal(
         5
       );
 
@@ -1416,7 +1416,7 @@ describe("BoralabsTBA6551: Unit test", function () {
         0
       );
       let uri = Util.decodeFunctionResult(["bytes"], result.toString())[0];
-      await expect(uri).to.equal(
+      await expect(uri).to.be.equal(
         "https://tokenmetadata.boraportal.com/contracts/2022999998/tokens/1"
       );
 
@@ -1523,7 +1523,7 @@ describe("BoralabsTBA6551: Unit test", function () {
         ["uint256"],
         result.toString()
       );
-      await expect(tokenCount[0]).to.equal(5);
+      await expect(tokenCount[0]).to.be.equal(5);
 
       this.mlog.after("[TBA Account 1]", "balance:", tokenCount[0]);
     });
@@ -1603,7 +1603,7 @@ describe("BoralabsTBA6551: Unit test", function () {
         result.toString()
       );
       let isExists = Util.toBoolean(decodeResult[0]);
-      await expect(isExists).to.equal(true);
+      await expect(isExists).to.be.equal(true);
 
       this.mlog.after("[10000001]", "is exist:", isExists);
     });
@@ -1642,7 +1642,7 @@ describe("BoralabsTBA6551: Unit test", function () {
         result.toString()
       );
       let isExists = Util.toBoolean(decodeResult[0]);
-      await expect(isExists).to.equal(false);
+      await expect(isExists).to.be.equal(false);
 
       this.mlog.after("[60000001]", "is exist:", isExists);
     });
@@ -1667,7 +1667,7 @@ describe("BoralabsTBA6551: Unit test", function () {
         result.toString()
       );
       let isSupportInterface = Util.toBoolean(decodeResult[0]);
-      await expect(isSupportInterface).to.equal(true);
+      await expect(isSupportInterface).to.be.equal(true);
     });
 
     it("Should support interface ERC165", async function () {
@@ -1688,7 +1688,7 @@ describe("BoralabsTBA6551: Unit test", function () {
         result.toString()
       );
       let isSupportInterface = Util.toBoolean(decodeResult[0]);
-      await expect(isSupportInterface).to.equal(true);
+      await expect(isSupportInterface).to.be.equal(true);
     });
 
     it("Should support interface ERC1155MetadataURI", async function () {
@@ -1709,7 +1709,7 @@ describe("BoralabsTBA6551: Unit test", function () {
         result.toString()
       );
       let isSupportInterface = Util.toBoolean(decodeResult[0]);
-      await expect(isSupportInterface).to.equal(true);
+      await expect(isSupportInterface).to.be.equal(true);
     });
 
     it("Should not support interface when interface id is invalid", async function () {
@@ -1730,7 +1730,7 @@ describe("BoralabsTBA6551: Unit test", function () {
         result.toString()
       );
       let isSupportInterface = Util.toBoolean(decodeResult[0]);
-      await expect(isSupportInterface).to.equal(false);
+      await expect(isSupportInterface).to.be.equal(false);
     });
   });
 
@@ -2097,7 +2097,7 @@ describe("BoralabsTBA6551: Unit test", function () {
       )[0];
       isApproved = Util.toBoolean(isApproved);
 
-      expect(isApproved).to.equal(true);
+      expect(isApproved).to.be.equal(true);
 
       this.mlog.after(
         "[TBA Account 1]",
