@@ -15,8 +15,8 @@ import {
   deployBora1155,
   deployBora6551Account,
   deployBora6551Registry,
-} from "./fixture";
-import mlog from "./mlog";
+} from "../util/fixture";
+import mlog from "../util/mlog";
 import { BigNumberish, Interface } from "ethers";
 
 describe("BoralabsTBA6551: Integration test", function () {
@@ -33,14 +33,10 @@ describe("BoralabsTBA6551: Integration test", function () {
   let tbaAddress2: string;
 
   let owner20: HardhatEthersSigner;
-  let owner721: HardhatEthersSigner;
   let owner1155: HardhatEthersSigner;
-  let ownerAccount: HardhatEthersSigner;
-  let ownerRegistry: HardhatEthersSigner;
 
   let User1: HardhatEthersSigner;
   let User2: HardhatEthersSigner;
-  let User3: HardhatEthersSigner;
 
   let data: string;
 
@@ -72,22 +68,18 @@ describe("BoralabsTBA6551: Integration test", function () {
     ({ bora20, owner20 } = await loadFixture(deployBora20));
 
     // deploy bora721
-    ({ bora721, owner721 } = await loadFixture(deployBora721));
+    ({ bora721 } = await loadFixture(deployBora721));
 
     // deploy bora1155
     ({ bora1155, owner1155 } = await loadFixture(deployBora1155));
 
     // deploy bora 6551 account
-    ({ bora6551Account, ownerAccount } = await loadFixture(
-      deployBora6551Account
-    ));
+    ({ bora6551Account } = await loadFixture(deployBora6551Account));
 
     // deploy bora 6551 registry
-    ({ bora6551Registry, ownerRegistry } = await loadFixture(
-      deployBora6551Registry
-    ));
+    ({ bora6551Registry } = await loadFixture(deployBora6551Registry));
 
-    [User1, User2, User3] = await ethers.getSigners();
+    [User1, User2] = await ethers.getSigners();
 
     // mint erc721
     await bora721.tbaMint(User1.address);

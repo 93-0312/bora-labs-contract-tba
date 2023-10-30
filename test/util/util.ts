@@ -6,7 +6,6 @@ class Util {
 
   static decodeFunctionResult(resultType: Array<string>, data: string) {
     let dataArr = Util.abi.decode(resultType, data).toArray();
-
     let result: any[] = [];
     dataArr.forEach(function (value) {
       if (ethers.isHexString(value)) {
