@@ -5,12 +5,14 @@ import { ethers, network } from "hardhat";
 import {
   BoralabsTBA20,
   BoralabsTBA721,
+  BoralabsTBA1155,
   BoralabsTBA6551Account,
   BoralabsTBA6551Registry,
 } from "../typechain-types";
 import {
   deployBora20,
   deployBora721,
+  deployBora1155,
   deployBora6551Account,
   deployBora6551Registry,
 } from "../util/fixture";
@@ -22,6 +24,7 @@ describe("BoralabsTBA1155: Unit test", function () {
 
   let bora20: BoralabsTBA20;
   let bora721: BoralabsTBA721;
+  let bora1155: BoralabsTBA1155;
   let bora6551Account: BoralabsTBA6551Account;
   let bora6551Registry: BoralabsTBA6551Registry;
   let User1: HardhatEthersSigner;
@@ -38,6 +41,11 @@ describe("BoralabsTBA1155: Unit test", function () {
     "function tbaMint( address to )",
   ]);
 
+  const iface1155 = new Interface([
+    "function tbaMint(address to, uint256 amount, bytes memory data)",
+  ]);
+
+  let amount = 10;
   const emptyData = "0x";
 
   beforeEach(async function () {
@@ -47,6 +55,9 @@ describe("BoralabsTBA1155: Unit test", function () {
 
     // deploy bora721
     ({ bora721 } = await loadFixture(deployBora721));
+
+    // deploy bora1155
+    ({ bora1155 } = await loadFixture(deployBora1155));
 
     // deploy bora 6551 account
     ({ bora6551Account } = await loadFixture(deployBora6551Account));
@@ -514,6 +525,345 @@ describe("BoralabsTBA1155: Unit test", function () {
     });
   });
 
+  describe("Transfer 721", async function () {
+    it("Should failed when user is not owner", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+      this.mlog.before(
+        "[User 2]",
+        "balance:",
+        await bora721.balanceOf(User2.address)
+      );
+
+      // Step 1: Call transfer721() by user is not owner
+      // Step 2: Verify transaction should be reverted
+      this.mlog.log("[User 2]", "calls transfer721()");
+      await expect(
+        tba.connect(User2).transfer721(bora721.target, User2.address, 10000001)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+      this.mlog.after(
+        "[User 2]",
+        "balance:",
+        await bora721.balanceOf(User2.address)
+      );
+    });
+
+    it("Should successfully when transfer token erc721 to EOA", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+      this.mlog.before(
+        "[User 2]",
+        "balance:",
+        await bora721.balanceOf(User2.address)
+      );
+
+      // Mint ERC721 for TBA Account
+      await bora721.tbaMint(tbaAddress);
+
+      // Step 1: Call transfer721() by user is owner
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log(
+        "[TBA Account]",
+        "calls transfer721() to transfer ERC721 tokenId 10000002 to User 2"
+      );
+      expect(
+        await tba
+          .connect(User1)
+          .transfer721(bora721.target, User2.address, 10000002)
+      ).to.be.ok;
+
+      // Step 3: Verify EOA balance is correct
+      expect(await bora721.balanceOf(User2.address)).to.be.equal(1);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+      this.mlog.after(
+        "[User 2]",
+        "balance:",
+        await bora721.balanceOf(User2.address)
+      );
+    });
+
+    it("Should successfully when transfer token erc721 to TBA", async function () {
+      // Mint ERC721 for TBA Account
+      await bora721.tbaMint(tbaAddress);
+
+      // User 1 creates a TBA account 2 with tokenId 20000001.
+      await bora6551Registry
+        .connect(User1)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          20000001,
+          0,
+          emptyData
+        );
+
+      // Get TBA Account 2 address
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        20000001,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+      this.mlog.before(
+        "[TBA Account 2]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress2)
+      );
+
+      // Step 1: Call transfer721() by user is owner
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls transfer721() to transfer ERC721 tokenId 10000002 to TBA Account 2"
+      );
+      expect(
+        await tba
+          .connect(User1)
+          .transfer721(bora721.target, tbaAddress2, 10000002)
+      ).to.be.ok;
+
+      // Step 3: Verify TBA balance is correct
+      expect(await bora721.balanceOf(tbaAddress)).to.be.equal(2);
+      expect(await bora721.balanceOf(tbaAddress2)).to.be.equal(1);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+      this.mlog.after(
+        "[TBA Account 2]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress2)
+      );
+    });
+  });
+
+  describe("Transfer 1155", async function () {
+    it("Should failed when user is not owner", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      this.mlog.before(
+        "[User 2]",
+        "balance:",
+        await bora1155.tokenCountOf(User2.address)
+      );
+
+      // Step 1: Call transfer1155() by user is not owner
+      // Step 2: Verify transaction should be reverted
+      this.mlog.log("[User 2]", "calls transfer1155()");
+      await expect(
+        tba
+          .connect(User2)
+          .transfer1155(
+            bora1155.target,
+            User2.address,
+            10000001,
+            amount,
+            emptyData
+          )
+      ).revertedWith("Ownable: caller is not the owner");
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      this.mlog.after(
+        "[User 2]",
+        "balance:",
+        await bora1155.tokenCountOf(User2.address)
+      );
+    });
+
+    it("Should successfully when transfer token erc1155 to EOA", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      this.mlog.before(
+        "[User 2]",
+        "balance:",
+        await bora1155.tokenCountOf(User2.address)
+      );
+
+      // Mint ERC1155 for TBA Account
+      this.mlog.log(
+        "[TBA Account]",
+        "owner of bora1155 mints 5 tokens for TBA Account"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, emptyData);
+      this.mlog.log(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+
+      // Step 1: Call transfer1155() by user is owner
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log(
+        "[TBA Account]",
+        "calls transfer1155() to transfer ERC1155 tokenId 10000001 to User 2"
+      );
+      expect(
+        await tba
+          .connect(User1)
+          .transfer1155(
+            bora1155.target,
+            User2.address,
+            10000001,
+            amount,
+            emptyData
+          )
+      ).to.be.ok;
+
+      // Step 3: Verify EOA balance is correct
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(4);
+      expect(await bora1155.tokenCountOf(User2.address)).to.be.equal(1);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      this.mlog.after(
+        "[User 2]",
+        "balance tokenIds:",
+        await bora1155.tokenCountOf(User2.address)
+      );
+    });
+
+    it("Should successfully when transfer token erc1155 to TBA", async function () {
+      // User 1 creates a TBA account 2 with tokenId 20000001.
+      await bora6551Registry
+        .connect(User1)
+        .createAccount(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          20000001,
+          0,
+          emptyData
+        );
+
+      // Get TBA Account 2 address
+      tbaAddress2 = await bora6551Registry.account(
+        bora6551Account.getAddress(),
+        network.config.chainId as BigNumberish,
+        bora721.getAddress(),
+        20000001,
+        0
+      );
+
+      this.mlog.before(
+        "[TBA Account 1]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      this.mlog.before(
+        "[TBA Account 2]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress2)
+      );
+
+      // Mint ERC1155 for TBA Account
+      this.mlog.log(
+        "[TBA Account 1]",
+        "owner of bora1155 mints 5 tokens for TBA Account"
+      );
+      await bora1155.tbaMint(tbaAddress, amount, emptyData);
+      this.mlog.log(
+        "[TBA Account 1]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+
+      // Step 1: Call transfer1155() by user is owner
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log(
+        "[TBA Account 1]",
+        "calls transfer1155() to transfer ERC1155 tokenId 10000001 to TBA Account 2 with amount is 10"
+      );
+      expect(
+        await tba
+          .connect(User1)
+          .transfer1155(
+            bora1155.target,
+            tbaAddress2,
+            10000001,
+            amount,
+            emptyData
+          )
+      ).to.be.ok;
+
+      // Step 3: Verify TBA balance is correct
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(4);
+      expect(await bora1155.tokenCountOf(tbaAddress2)).to.be.equal(1);
+
+      this.mlog.after(
+        "[TBA Account 1]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      this.mlog.after(
+        "[TBA Account 2]",
+        "number of tokenIds:",
+        await bora1155.tokenCountOf(tbaAddress2)
+      );
+    });
+  });
+
+  describe("IsValidSigner", async function () {
+    it("Should return 0x00000000 when user is not owner", async function () {
+      // Step 1: Call isValidSigner() by user is not owner
+      // Step 2: Verify transaction should be successfully
+      // Step 3: Verify return value is 0x00000000
+      this.mlog.log("[User 2]", "calls isValidSigner()");
+      expect(
+        await tba.connect(User2).isValidSigner(User2.address, emptyData)
+      ).to.be.equal("0x00000000");
+    });
+
+    it("Should return 0x523e3260 when user is owner", async function () {
+      // Step 1: Call isValidSigner() by user is owner
+      // Step 2: Verify transaction should be successfully
+      // Step 3: Verify return value is 0x523e3260
+      this.mlog.log("[User 1]", "calls isValidSigner()");
+      expect(
+        await tba.connect(User1).isValidSigner(User1.address, emptyData)
+      ).to.be.equal("0x523e3260");
+    });
+  });
+
   describe("IsValidSignature", async function () {
     it("Should return empty when signature is invalid", async function () {
       // Step 1: Call isValidSignature() with 0x00000000
@@ -541,6 +891,178 @@ describe("BoralabsTBA1155: Unit test", function () {
       await expect(
         await tba.connect(User1).isValidSignature(message, signature)
       ).to.be.equal("0x1626ba7e");
+    });
+  });
+
+  describe("Support Interface", async function () {
+    it("Should return false when interface id is invalid", async function () {
+      // Step 1: Call supportsInterface() with 0x00000000
+      // Step 2: Verify transaction should be successfully
+      // Step 3: Verify return value is false
+      this.mlog.log(
+        "[TBA Account]",
+        "calls supportsInterface() with 0x00000000"
+      );
+      expect(await tba.connect(User1).supportsInterface("0x00000000")).to.be
+        .false;
+    });
+
+    it("Should return true when interface id is IERC165 interface id", async function () {
+      // Step 1: Call supportsInterface() with IERC165 interface id
+      // Step 2: Verify transaction should be successfully
+      // Step 3: Verify return value is true
+      this.mlog.log(
+        "[TBA Account]",
+        "calls supportsInterface() with with IERC165 interface id"
+      );
+      expect(await tba.connect(User1).supportsInterface("0x01ffc9a7")).to.be
+        .true;
+    });
+
+    it("Should return true when interface id is IERC6551Account interface id", async function () {
+      // Step 1: Call supportsInterface() with IERC6551Account interface id
+      // Step 2: Verify transaction should be successfully
+      // Step 3: Verify return value is true
+      this.mlog.log(
+        "[TBA Account]",
+        "calls supportsInterface() with with IERC6551Account interface id"
+      );
+      expect(await tba.connect(User1).supportsInterface("0x6faff5f1")).to.be
+        .true;
+    });
+
+    it("Should return true when interface id is IERC6551Executable interface id", async function () {
+      // Step 1: Call supportsInterface() with IERC6551Executable interface id
+      // Step 2: Verify transaction should be successfully
+      // Step 3: Verify return value is true
+      this.mlog.log(
+        "[TBA Account]",
+        "calls supportsInterface() with with IERC6551Executable interface id"
+      );
+      expect(await tba.connect(User1).supportsInterface("0x74420f4c")).to.be
+        .true;
+    });
+  });
+
+  describe("Token", async function () {
+    it("Should return chainid, token contract and token id correctly", async function () {
+      // Step 1: Call token()
+      // Step 2: Verify transaction should be successfully
+      // Step 3: Verify return value is correct
+      this.mlog.log("[User 1]", "calls token()");
+      expect(await tba.connect(User1).token()).to.be.deep.equal([
+        network.config.chainId as BigNumberish,
+        await bora721.getAddress(),
+        10000001n,
+      ]);
+    });
+  });
+
+  describe("Owner", async function () {
+    it("Should return owner of token correctly", async function () {
+      // Step 1: Call owner()
+      // Step 2: Verify transaction should be successfully
+      // Step 3: Verify return value is correct
+      this.mlog.log("[User 1]", "calls owner()");
+      expect(await tba.connect(User1).owner()).to.be.equal(User1.address);
+    });
+  });
+
+  describe("Receive", async function () {
+    it("Should be successful when TBA receives the coins", async function () {
+      this.mlog.before(
+        "[User 1]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      // Step 1: User 1 call sendTransaction() to send 1000 wei to TBA account
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log(
+        "[User 1]",
+        "calls sendTransaction() to send 1000 wei to TBA Account"
+      );
+      expect(
+        await User1.sendTransaction({
+          to: tbaAddress,
+          value: ethers.parseUnits("1000", "wei"),
+        })
+      ).to.be.ok;
+
+      // Step 3: Verify balance of contract increase 1000 wei
+      expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(1000);
+
+      this.mlog.after(
+        "[User 1]",
+        "balance:",
+        await ethers.provider.getBalance(User1.address)
+      );
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+    });
+  });
+
+  describe("onERC721Received", async function () {
+    it("Should successfully when mint for TBA account", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+
+      // Step 1: TBA call tbaMint() via execute() function
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log("[User 1]", "calls execute() to call tbaMint()");
+      let data = iface721.encodeFunctionData("tbaMint", [tbaAddress]);
+      expect(await tba.connect(User1).execute(bora721.target, 0, data, 0)).to.be
+        .ok;
+
+      // Step 3: Verify token balance of TBA account increase 3 tokens
+      expect(await bora721.balanceOf(tbaAddress)).to.be.equal(3);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+    });
+  });
+
+  describe("onERC1155Received", async function () {
+    it("Should successfully when mint for TBA account", async function () {
+      this.mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+
+      // Step 1: TBA call tbaMint() via execute() function
+      // Step 2: Verify transaction should be successfully
+      this.mlog.log("[User 1]", "calls execute() to call tbaMint()");
+      let data = iface1155.encodeFunctionData("tbaMint", [
+        tbaAddress,
+        amount,
+        emptyData,
+      ]);
+      expect(await tba.connect(User1).execute(bora1155.target, 0, data, 0)).to
+        .be.ok;
+
+      // Step 3: Verify token balance of TBA account increase 5 tokens
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(5);
+
+      this.mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
     });
   });
 });
