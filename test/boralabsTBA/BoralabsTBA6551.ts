@@ -1731,9 +1731,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       await bora1155.tbaMint(tbaAddress, amount, "0x");
 
       // Step 4: Verify token balance of TBA account is 150
-      await expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
-        150
-      );
+      await expect(
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      ).to.be.equal(150);
 
       this.mlog.after(
         "[TBA Account]",
@@ -1790,9 +1790,9 @@ describe("BoralabsTBA6551: Integration test", function () {
         .safeTransferFrom(User1.address, tbaAddress, 30000001, amount, "0x");
 
       // Step 5: Verify token balance of TBA account is 30
-      await expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
-        30
-      );
+      await expect(
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      ).to.be.equal(30);
 
       // Step 6: Verify token balance of TBA’s owner is 20
       await expect(
@@ -1860,9 +1860,9 @@ describe("BoralabsTBA6551: Integration test", function () {
         .safeTransferFrom(User2.address, tbaAddress, 30000001, amount, "0x");
 
       // Step 5: Verify token balance of TBA account is 30
-      await expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
-        30
-      );
+      await expect(
+        (await bora1155.tokenCountOf(tbaAddress)) * amount
+      ).to.be.equal(30);
 
       // Step 6: Verify token balance of TBA’s owner is 20
       await expect(
@@ -1933,7 +1933,9 @@ describe("BoralabsTBA6551: Integration test", function () {
         .transfer1155(bora1155.target, User1.address, 30000001, amount, "0x");
 
       // Step 5: Verify token balance of TBA account is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       // Step 6: Verify token balance of TBA’s owner is 30
       expect((await bora1155.tokenCountOf(User1.address)) * amount).to.be.equal(
@@ -2000,7 +2002,9 @@ describe("BoralabsTBA6551: Integration test", function () {
         .transfer1155(bora1155.target, User2.address, 30000001, amount, "0x");
 
       // Step 5: Verify token balance of TBA account is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       // Step 6: Verify token balance of User2 is 30
       expect((await bora1155.tokenCountOf(User2.address)) * amount).to.be.equal(
@@ -2088,10 +2092,14 @@ describe("BoralabsTBA6551: Integration test", function () {
         .transfer1155(bora1155.target, tbaAddress2, 30000001, amount, "0x");
 
       // Step 6: Verify token balance of TBA account 1 is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       // Step 7: Verify token balance of TBA account 2 is 30
-      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.be.equal(30);
+      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.be.equal(
+        30
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -2175,10 +2183,14 @@ describe("BoralabsTBA6551: Integration test", function () {
         .transfer1155(bora1155.target, tbaAddress2, 30000001, amount, "0x");
 
       // Step 6: Verify token balance of TBA account 1 is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       // Step 7: Verify token balance of TBA account 2 is 30
-      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.be.equal(30);
+      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.be.equal(
+        30
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -2255,7 +2267,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       await tba.connect(User1).execute(bora1155.target, 0, data, 0);
 
       // Step 5: Verify token balance of TBA account is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       // Step 6: Verify token balance of User2 is 30
       expect((await bora1155.tokenCountOf(User2)) * amount).to.be.equal(30);
@@ -2335,7 +2349,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       await tba.connect(User1).execute(bora1155.target, 0, data, 0);
 
       // Step 5: Verify token balance of TBA account is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       // Step 6: Verify token balance of TBA’s owner is 30
       expect((await bora1155.tokenCountOf(User1.address)) * amount).to.be.equal(
@@ -2438,10 +2454,14 @@ describe("BoralabsTBA6551: Integration test", function () {
       await tba.connect(User1).execute(bora1155.target, 0, data, 0);
 
       // Step 6: Verify token balance of TBA account 1 is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       // Step 7: Verify token balance of TBA account 2 is 30
-      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.be.equal(30);
+      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.be.equal(
+        30
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -2540,10 +2560,14 @@ describe("BoralabsTBA6551: Integration test", function () {
       await tba.connect(User1).execute(bora1155.target, 0, data, 0);
 
       // Step 6: Verify token balance of TBA account 1 is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       // Step 7: Verify token balance of TBA account 2 is 30
-      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.be.equal(30);
+      expect((await bora1155.tokenCountOf(tbaAddress2)) * amount).to.be.equal(
+        30
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -2603,7 +2627,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       await bora1155.burn(30000001, amount);
 
       // Step 5: Verify token balance of TBA account is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       this.mlog.after(
         "[TBA Account]",
@@ -2658,7 +2684,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       await tba.connect(User1).execute(bora1155.target, 0, data, 0);
 
       // Step 5: Verify token balance of TBA account is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(20);
+      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
+        20
+      );
 
       this.mlog.after(
         "[TBA Account]",
