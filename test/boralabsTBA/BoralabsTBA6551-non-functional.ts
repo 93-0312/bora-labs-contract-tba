@@ -39,8 +39,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
   const iface20 = new Interface([
     "function transfer(address to, uint256 amount)",
     "function burn(uint256 amount)",
+    "function burnFrom(address account, uint256 amount)",
     "function approve(address spender, uint256 amount)",
   ]);
+
+  const iface721 = new Interface(["function tbaMint(address to)"]);
 
   beforeEach(async function () {
     // deploy bora20
@@ -191,8 +194,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       await mintERC20(this.mlog, 5000);
     });
 
-    // TODO: Out of memory
-    it.skip("Should be successful when mint 10.000 times at the same time", async function () {
+    it("Should be successful when mint 10.000 times at the same time", async function () {
       await mintERC20(this.mlog, 10000);
     });
 
@@ -271,8 +273,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       await transfer(this.mlog, 5000);
     });
 
-    // TODO: Out of memory
-    it.skip("Should be successful when transferring 10.000 times at the same time", async function () {
+    it("Should be successful when transferring 10.000 times at the same time", async function () {
       await transfer(this.mlog, 10000);
     });
 
@@ -282,7 +283,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     });
   });
 
-  describe.only("Stress Testing - Execute - Burn ERC20", async function () {
+  describe("Stress Testing - Execute - Burn ERC20", async function () {
     async function burn(mlog: mlog, transactionCount: number) {
       mlog.before(
         "[TBA Account]",
@@ -333,14 +334,128 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       await burn(this.mlog, 5000);
     });
 
-    // TODO: Out of memory
-    it.skip("Should be successful when burning 10.000 times at the same time", async function () {
+    it("Should be successful when burning 10.000 times at the same time", async function () {
       await burn(this.mlog, 10000);
     });
 
     // TODO: Out of memory
     it.skip("Should be successful when burning 100.000 times at the same time", async function () {
       await burn(this.mlog, 100000);
+    });
+  });
+
+  describe("Stress Testing - Execute - Burn From ERC20", async function () {
+    async function burnFrom(mlog: mlog, transactionCount: number) {
+      mlog.before(
+        "[User 1]",
+        "balance:",
+        await bora20.balanceOf(User1.address)
+      );
+
+      // Step 1: Owner of ERC20 mints token with amount is ${transactionCount} for User 1
+      mlog.log(
+        "[User 1]",
+        `mints token with amount is ${transactionCount} for User 1`
+      );
+      await bora20.mint(User1.address, transactionCount);
+      mlog.log("[User 1]", "balance:", await bora20.balanceOf(User1.address));
+
+      // Step 2: User 1 approves for TBA account
+      mlog.log("[User 1]", "approves for TBA account");
+      await bora20.approve(tbaAddress, transactionCount);
+
+      // Step 3: TBA calls execute() ${transactionCount} times to burn from User 1 with amount is 1
+      mlog.log(
+        "[TBA Account]",
+        `calls execute() ${transactionCount} times to burn from User 1 with amount is 1`
+      );
+      data = iface20.encodeFunctionData("burnFrom", [User1.address, 1]);
+      for (let i = 0; i < transactionCount; i++) {
+        await tba.connect(User1).execute(bora20.target, 0, data, 0);
+        Util.showProgress(i + 1, transactionCount);
+      }
+      Util.clearProgress();
+
+      // Step 4: Verify token balance of User 1 is 0
+      expect(await bora20.balanceOf(User1.address)).to.be.equals(0);
+
+      mlog.after("[User 1]", "balance:", await bora20.balanceOf(User1.address));
+    }
+
+    it("Should be successful when burning from 100 times at the same time", async function () {
+      await burnFrom(this.mlog, 100);
+    });
+
+    it("Should be successful when burning from 1.000 times at the same time", async function () {
+      await burnFrom(this.mlog, 1000);
+    });
+
+    it("Should be successful when burning from 5.000 times at the same time", async function () {
+      await burnFrom(this.mlog, 5000);
+    });
+
+    it("Should be successful when burning from 10.000 times at the same time", async function () {
+      await burnFrom(this.mlog, 10000);
+    });
+
+    // TODO: out of memory
+    it.skip("Should be successful when burning from 100.000 times at the same time", async function () {
+      await burnFrom(this.mlog, 100000);
+    });
+  });
+
+  describe("Stress Testing - Execute - Mint ERC721", async function () {
+    async function mintERC721(mlog: mlog, transactionCount: number) {
+      mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+
+      // Step 1: TBA calls execute() ${transactionCount} times to mint erc721 token
+      mlog.log(
+        "[TBA Account]",
+        `calls execute() ${transactionCount} times to mint erc721 token`
+      );
+      data = iface721.encodeFunctionData("tbaMint", [tbaAddress]);
+      for (let i = 0; i < transactionCount; i++) {
+        await tba.connect(User1).execute(bora721.target, 0, data, 0);
+        Util.showProgress(i + 1, transactionCount);
+      }
+      Util.clearProgress();
+
+      // Step 2: Verify token balance of TBA account is ${transactionCount * 3}
+      expect(await bora721.balanceOf(tbaAddress)).to.be.equals(
+        transactionCount * 3
+      );
+
+      mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+    }
+
+    it("Should be successful when mint 100 times at the same time", async function () {
+      await mintERC721(this.mlog, 100);
+    });
+
+    it("Should be successful when mint 1.000 times at the same time", async function () {
+      await mintERC721(this.mlog, 1000);
+    });
+
+    it("Should be successful when mint 5.000 times at the same time", async function () {
+      await mintERC721(this.mlog, 5000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when mint 10.000 times at the same time", async function () {
+      await mintERC721(this.mlog, 10000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when mint 100.000 times at the same time", async function () {
+      await mintERC721(this.mlog, 100000);
     });
   });
 });
