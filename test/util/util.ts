@@ -66,6 +66,30 @@ class Util {
     return tokenIds;
   }
 
+  static async mintMulti1155ForMultiUser(
+    mintTo: string,
+    amount: number,
+    mintData: any,
+    mintTimes: number,
+    contract: BoralabsTBA1155
+  ) {
+    const availableMintNum = await contract.availableMintNum();
+    let tokenIds = [];
+    const mintBand = 10000000;
+
+    for (let i = 0; i < mintTimes; ++i) {
+      tokenIds.push(mintBand + Number(availableMintNum) + i);
+      tokenIds.push(mintBand * 2 + Number(availableMintNum) + i);
+      tokenIds.push(mintBand * 3 + Number(availableMintNum) + i);
+      tokenIds.push(mintBand * 4 + Number(availableMintNum) + i);
+      tokenIds.push(mintBand * 5 + Number(availableMintNum) + i);
+      await contract.tbaMint(mintTo, amount, mintData);
+      Util.showProgress(i + 1, mintTimes);
+    }
+    Util.clearProgress();
+    return tokenIds;
+  }
+
   static async executeMintMulti1155(
     tba: BoralabsTBA6551Account,
     mintTo: string,
@@ -93,7 +117,9 @@ class Util {
       tokenIds.push(mintBand * 4 + Number(availableMintNum) + i);
       tokenIds.push(mintBand * 5 + Number(availableMintNum) + i);
       await tba.execute(await contract.getAddress(), 0, data, 0);
+      Util.showProgress(i + 1, mintTimes);
     }
+    Util.clearProgress();
     return tokenIds;
   }
 
@@ -102,9 +128,12 @@ class Util {
     mintTimes: number,
     contract: BoralabsTBA721
   ) {
+    let tokenIds = [];
     for (let i = 0; i < mintTo.length; ++i) {
-      this.mintMulti721(mintTo[i], mintTimes, contract);
+      const tokenId = await this.mintMulti721(mintTo[i], mintTimes, contract);
+      tokenIds.push(...tokenId);
     }
+    return tokenIds;
   }
 
   static createMultiUser(numOfUsers: number) {
@@ -135,7 +164,9 @@ class Util {
         salt,
         "0x"
       );
+      Util.showProgress(i + 1, numOfAccount);
     }
+    Util.clearProgress();
   }
 
   static async getTotalTBA(

@@ -5,12 +5,14 @@ import { ethers, network } from "hardhat";
 import {
   BoralabsTBA20,
   BoralabsTBA721,
+  BoralabsTBA1155,
   BoralabsTBA6551Account,
   BoralabsTBA6551Registry,
 } from "../typechain-types";
 import {
   deployBora20,
   deployBora721,
+  deployBora1155,
   deployBora6551Account,
   deployBora6551Registry,
 } from "../util/fixture";
@@ -25,6 +27,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
 
   let bora20: BoralabsTBA20;
   let bora721: BoralabsTBA721;
+  let bora1155: BoralabsTBA1155;
   let bora6551Account: BoralabsTBA6551Account;
   let bora6551Registry: BoralabsTBA6551Registry;
 
@@ -48,12 +51,19 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     "function transferFrom( address from, address to, uint256 tokenId )",
   ]);
 
+  const iface1155 = new Interface([
+    "function safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes data)",
+  ]);
+
   beforeEach(async function () {
     // deploy bora20
     ({ bora20 } = await loadFixture(deployBora20));
 
     // deploy bora721
     ({ bora721 } = await loadFixture(deployBora721));
+
+    // deploy bora1155
+    ({ bora1155 } = await loadFixture(deployBora1155));
 
     // deploy bora 6551 account
     ({ bora6551Account } = await loadFixture(deployBora6551Account));
@@ -629,6 +639,142 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     // TODO: out of memory
     it.skip("Should be successful when burning 300.000 times at the same time.", async function () {
       await burnFrom(this.mlog, 300000);
+    });
+  });
+
+  describe("Stress Testing - Execute - Mint ERC1155", async function () {
+    async function tbaMint1155(mlog: mlog, numberOfTransaction: number) {
+      mlog.before(
+        "[TBA Account]",
+        "tokens balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+
+      // Step 1: TBA calls execute() ${numberOfTransaction} times to mint erc1155 token with amount is 1
+      mlog.log(
+        "[TBA Account]",
+        `calls execute() ${numberOfTransaction} times to mint erc1155 token with amount is 1`
+      );
+      await Util.executeMintMulti1155(
+        tba,
+        tbaAddress,
+        1,
+        "0x",
+        numberOfTransaction,
+        bora1155
+      );
+
+      // Step 2: Verify token balance of TBA account is ${numberOfTransaction}
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(
+        numberOfTransaction * 5
+      );
+      mlog.after(
+        "[TBA Account]",
+        "tokens balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+    }
+
+    it("Should be successful when mint 100 times at the same time", async function () {
+      await tbaMint1155(this.mlog, 100);
+    });
+
+    it("Should be successful when mint 1.000 times at the same time", async function () {
+      await tbaMint1155(this.mlog, 1000);
+    });
+
+    it("Should be successful when mint 5.000 times at the same time", async function () {
+      await tbaMint1155(this.mlog, 5000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when mint 10.000 times at the same time", async function () {
+      await tbaMint1155(this.mlog, 10000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when mint 100.000 times at the same time", async function () {
+      await tbaMint1155(this.mlog, 100000);
+    });
+  });
+
+  describe.only("Stress Testing - Execute - Safe Transfer From ERC1155", async function () {
+    async function transfer1155(mlog: mlog, numberOfTransaction: number) {
+      const mintTimes = numberOfTransaction / 5;
+
+      // Step 1: TBA calls execute() ${mintTimes} times to mint erc1155 token
+      const tokenIds = await Util.executeMintMulti1155(
+        tba,
+        tbaAddress,
+        1,
+        "0x",
+        mintTimes,
+        bora1155
+      );
+      mlog.before(
+        "[TBA Account]",
+        "tokens balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      mlog.before(
+        "[User 2]",
+        "tokens balance:",
+        await bora1155.tokenCountOf(User2.address)
+      );
+
+      // Step 2: TBA call execute() ${numberOfTransaction} times to transfer token to User 2 with amount is 1
+      mlog.log(
+        "[TBA Account]",
+        `calls execute() ${numberOfTransaction} times to transfer token to User 2 with amount is 1`
+      );
+      for (let i = 0; i < numberOfTransaction; ++i) {
+        let data = iface1155.encodeFunctionData("safeTransferFrom", [
+          tbaAddress,
+          User2.address,
+          tokenIds[i],
+          1,
+          "0x",
+        ]);
+        await tba.execute(await bora1155.getAddress(), 0, data, 0);
+        Util.showProgress(i, numberOfTransaction);
+      }
+      Util.clearProgress();
+
+      // Step 3: Verify token balance of TBA account is 0
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(0);
+
+      // Step 4: Verify token balance of User 2 is ${numberOfTransaction}
+      expect(await bora1155.tokenCountOf(User2)).to.be.equal(
+        numberOfTransaction
+      );
+      mlog.after(
+        "[TBA Account]",
+        "tokens balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      mlog.after(
+        "[User 2]",
+        "tokens balance:",
+        await bora1155.tokenCountOf(User2)
+      );
+    }
+
+    it("Should be successful when safe transfer from 500 times at the same time", async function () {
+      await transfer1155(this.mlog, 500);
+    });
+
+    it("Should be successful when safe transfer from 5.000 times at the same time", async function () {
+      await transfer1155(this.mlog, 5000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when safe transfer from 50.000 times at the same time", async function () {
+      await transfer1155(this.mlog, 50000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when safe transfer from 500.000 times at the same time", async function () {
+      await transfer1155(this.mlog, 500000);
     });
   });
 });
