@@ -556,7 +556,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     });
   });
 
-  describe.only("Stress Testing - Execute - Burn ERC721", async function () {
+  describe("Stress Testing - Execute - Burn ERC721", async function () {
     async function burnFrom(mlog: mlog, numberOfTransaction: number) {
       mlog.before(
         "[TBA Account]",
