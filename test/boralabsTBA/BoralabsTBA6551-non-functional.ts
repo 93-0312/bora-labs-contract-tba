@@ -38,6 +38,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
   let User2: HardhatEthersSigner;
 
   let data: string;
+  const emptyData = "0x";
 
   const iface20 = new Interface([
     "function transfer(address to, uint256 amount)",
@@ -53,6 +54,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
 
   const iface1155 = new Interface([
     "function safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes data)",
+    "function burn(uint256 id, uint256 amount)",
   ]);
 
   beforeEach(async function () {
@@ -698,7 +700,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     });
   });
 
-  describe.only("Stress Testing - Execute - Safe Transfer From ERC1155", async function () {
+  describe("Stress Testing - Execute - Safe Transfer From ERC1155", async function () {
     async function transfer1155(mlog: mlog, numberOfTransaction: number) {
       const mintTimes = numberOfTransaction / 5;
 
@@ -775,6 +777,157 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     // TODO: Out of memory
     it.skip("Should be successful when safe transfer from 500.000 times at the same time", async function () {
       await transfer1155(this.mlog, 500000);
+    });
+  });
+
+  describe("Stress Testing - Execute - Burn ERC1155", async function () {
+    async function burn(mlog: mlog, numberOfTransaction: number) {
+      mlog.before(
+        "[TBA Account]",
+        "token erc1155 balance",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+
+      // Step 1: TBA call execute() ${numberOfTransaction} times to mint erc1155 token with amount is 1
+      mlog.log(
+        "[TBA Account]",
+        `calls execute() to mint ${numberOfTransaction} token to TBA`
+      );
+      const mintAmount = 1;
+      const tokenIds = await Util.executeMintMulti1155(
+        tba,
+        tbaAddress,
+        mintAmount,
+        emptyData,
+        numberOfTransaction / 5,
+        bora1155
+      );
+      mlog.log(
+        "[TBA Account]",
+        "token erc1155 balance",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+
+      // Step 2: TBA calls execute() to burn ${numberOfTransaction} times with amount is 1
+      mlog.log(
+        "[TBA Account]",
+        `calls execute() to burn ${numberOfTransaction} times with amount is 1`
+      );
+      const burnAmount = 1;
+      for (let i = 0; i < numberOfTransaction; i++) {
+        data = iface1155.encodeFunctionData("burn", [tokenIds[i], burnAmount]);
+        await tba.execute(await bora1155.getAddress(), 0, data, 0);
+        Util.showProgress(i + 1, numberOfTransaction);
+      }
+      Util.clearProgress();
+
+      // Step 3: Verify token balance of TBA account is 0
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(0);
+
+      mlog.after(
+        "[TBA Account]",
+        "token erc1155 balance",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+    }
+
+    it("Should be successful when burning 500 times at the same time", async function () {
+      await burn(this.mlog, 500);
+    });
+
+    it("Should be successful when burning 5.000 times at the same time", async function () {
+      await burn(this.mlog, 5000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when burning 50.000 times at the same time", async function () {
+      await burn(this.mlog, 50000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when burning 500.000 times at the same time", async function () {
+      await burn(this.mlog, 500000);
+    });
+  });
+
+  describe("Stress Testing - Execute - Transfer Coin", async function () {
+    async function transferCoin(mlog: mlog, numberOfTransaction: number) {
+      mlog.before(
+        "[TBA Account]",
+        "balance",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+      mlog.before(
+        "[User 2]",
+        "balance",
+        await ethers.provider.getBalance(User2.address)
+      );
+
+      // Step 1: User 1 transfers ${numberOfTransaction} wei to TBA
+      const transferCoin = numberOfTransaction * 10;
+      mlog.log("[User 1]", `transfer ${transferCoin} wei to TBA`);
+      await User1.sendTransaction({
+        to: tbaAddress,
+        value: `${transferCoin}`,
+      });
+      mlog.log(
+        "[TBA Account]",
+        "balance",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+
+      // Step 2: TBA calls transferCoin ${numberOfTransaction} times with amount is 10 to transfer coin to User 2
+      mlog.log(
+        "[TBA Account]",
+        `calls transferCoin ${numberOfTransaction} times with amount is 10 to User 2`
+      );
+      const transferAmount = 10;
+      const user2CoinBalanceBefore = await ethers.provider.getBalance(
+        User2.address
+      );
+      for (let i = 0; i < numberOfTransaction; i++) {
+        await tba.transferCoin(User2.address, transferAmount);
+        Util.showProgress(i + 1, numberOfTransaction);
+      }
+      Util.clearProgress();
+
+      // Step 3: Verify token balance of TBA account is 0
+      expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(0);
+      expect(await ethers.provider.getBalance(User2.address)).to.be.equal(
+        user2CoinBalanceBefore + BigInt(transferCoin)
+      );
+
+      mlog.after(
+        "[TBA Account]",
+        "balance",
+        await ethers.provider.getBalance(tbaAddress)
+      );
+      mlog.after(
+        "[User 2]",
+        "balance",
+        await ethers.provider.getBalance(User2.address)
+      );
+    }
+
+    it("Should be successful when transferCoin() 100 times at the same time.", async function () {
+      await transferCoin(this.mlog, 100);
+    });
+
+    it("Should be successful when transferCoin() 1.000 times at the same time.", async function () {
+      await transferCoin(this.mlog, 100);
+    });
+
+    it("Should be successful when transferCoin() 5.000 times at the same time.", async function () {
+      await transferCoin(this.mlog, 5000);
+    });
+
+    it("Should be successful when transferCoin() 10.000 times at the same time.", async function () {
+      await transferCoin(this.mlog, 10000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when transferCoin() 100.000 times at the same time.", async function () {
+      await transferCoin(this.mlog, 100000);
     });
   });
 });
