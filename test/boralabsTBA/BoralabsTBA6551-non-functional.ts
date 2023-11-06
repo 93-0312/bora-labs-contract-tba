@@ -930,4 +930,161 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       await transferCoin(this.mlog, 100000);
     });
   });
+
+  describe("Stress Testing - Transfer721", async function () {
+    async function transfer721(mlog: mlog, numberOfTransaction: number) {
+      mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+
+      mlog.before(
+        "[User 2]",
+        "balance:",
+        await bora721.balanceOf(User2.address)
+      );
+
+      // Step 1: Owner of ERC721 mint ${numberOfTransaction * 3} tokens to TBA
+      mlog.log(
+        "[Owner of ERC721]",
+        `mint ${numberOfTransaction * 3} tokens to TBA`
+      );
+      let tokenIds = await Util.mintMulti721(
+        tbaAddress,
+        numberOfTransaction,
+        bora721
+      );
+      mlog.log(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+
+      // Step 2: TBA calls transfer721() ${numberOfTransaction * 3} times to transfer tokens to User 2
+      mlog.log(
+        "[TBA Account]",
+        `calls transfer721() ${
+          numberOfTransaction * 3
+        } times to transfer tokens to User 2`
+      );
+      for (let i = 0; i < numberOfTransaction * 3; i++) {
+        await tba.transfer721(bora721.target, User2.address, tokenIds[i]);
+        Util.showProgress(i + 1, numberOfTransaction * 3);
+      }
+      Util.clearProgress();
+
+      // Step 3: Verify token balance of TBA is 0
+      expect(await bora721.balanceOf(tbaAddress)).to.be.equals(0);
+
+      // Step 4: Verify token balance of User 2 is ${numberOfTransaction * 3}
+      expect(await bora721.balanceOf(User2.address)).to.be.equals(
+        numberOfTransaction * 3
+      );
+
+      mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora721.balanceOf(tbaAddress)
+      );
+
+      mlog.after(
+        "[User 2]",
+        "balance:",
+        await bora721.balanceOf(User2.address)
+      );
+    }
+
+    it("Should be successful when transfer721() 300 times at the same time", async function () {
+      await transfer721(this.mlog, 100);
+    });
+
+    it("Should be successful when transfer721() 3000 times at the same time", async function () {
+      await transfer721(this.mlog, 1000);
+    });
+
+    it("Should be successful when transfer721() 5001 times at the same time", async function () {
+      await transfer721(this.mlog, 1667);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when transfer721() 30000 times at the same time", async function () {
+      await transfer721(this.mlog, 10000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when transfer721() 300000 times at the same time", async function () {
+      await transfer721(this.mlog, 100000);
+    });
+  });
+
+  describe("Stress Testing - Transfer20", async function () {
+    async function transfer20(mlog: mlog, numberOfTransaction: number) {
+      mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora20.balanceOf(tbaAddress)
+      );
+
+      mlog.before(
+        "[User 2]",
+        "balance:",
+        await bora20.balanceOf(User2.address)
+      );
+
+      // Step 1: Owner of ERC20 mint ${numberOfTransaction} tokens to TBA
+      mlog.log("[Owner of ERC20]", `mint ${numberOfTransaction} tokens to TBA`);
+      await bora20.mint(tbaAddress, numberOfTransaction);
+      mlog.log("[TBA Account]", "balance:", await bora20.balanceOf(tbaAddress));
+
+      // Step 2: TBA calls transfer20() ${numberOfTransaction} times to transfer tokens to User 2
+      mlog.log(
+        "[TBA Account]",
+        `calls transfer20() ${numberOfTransaction} times with amount is 1 to transfer tokens to User 2`
+      );
+      for (let i = 0; i < numberOfTransaction; i++) {
+        await tba.transfer20(bora20.target, User2.address, 1);
+        Util.showProgress(i + 1, numberOfTransaction);
+      }
+      Util.clearProgress();
+
+      // Step 3: Verify token balance of TBA is 0
+      expect(await bora20.balanceOf(tbaAddress)).to.be.equals(0);
+
+      // Step 4: Verify token balance of User 2 is ${numberOfTransaction}
+      expect(await bora20.balanceOf(User2.address)).to.be.equals(
+        numberOfTransaction
+      );
+
+      mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora20.balanceOf(tbaAddress)
+      );
+
+      mlog.after("[User 2]", "balance:", await bora20.balanceOf(User2.address));
+    }
+
+    it("Should be successful when transfer20() 300 times at the same time", async function () {
+      await transfer20(this.mlog, 300);
+    });
+
+    it("Should be successful when transfer20() 3000 times at the same time", async function () {
+      await transfer20(this.mlog, 3000);
+    });
+
+    it("Should be successful when transfer20() 5000 times at the same time", async function () {
+      await transfer20(this.mlog, 5000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when transfer20() 30000 times at the same time", async function () {
+      await transfer20(this.mlog, 30000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when transfer20() 300000 times at the same time", async function () {
+      await transfer20(this.mlog, 300000);
+    });
+  });
 });
