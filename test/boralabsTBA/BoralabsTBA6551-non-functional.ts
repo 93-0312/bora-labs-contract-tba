@@ -1087,4 +1087,98 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       await transfer20(this.mlog, 300000);
     });
   });
+
+  describe("Stress Testing - Transfer1155", async function () {
+    async function transfer1155(mlog: mlog, numberOfTransaction: number) {
+      mlog.before(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      mlog.before(
+        "[User 2]",
+        "balance:",
+        await bora1155.tokenCountOf(User2.address)
+      );
+
+      // Step 1: Owner of ERC1155 mint ${numberOfTransaction} token id with amount of each is 1.000 to TBA.
+      mlog.log(
+        "[Owner of ERC1155]",
+        "mint",
+        numberOfTransaction,
+        "token id with amount of each is 1.000 to TBA."
+      );
+      const amount = 1000;
+      const emptyData = "0x";
+      let tokenIds = await Util.mintMulti1155(
+        tbaAddress,
+        amount,
+        emptyData,
+        numberOfTransaction / 5,
+        bora1155
+      );
+
+      // Step 2: TBA calls transfer1155() ${numberOfTransaction} times with an amount of 1.000 to transfer tokens to User 2.
+      mlog.log(
+        "[TBA Account]",
+        "calls transfer1155()",
+        numberOfTransaction,
+        "times with an amount of 1.000 to transfer tokens to User 2."
+      );
+      for (let i = 0; i < numberOfTransaction; i++) {
+        await tba
+          .connect(User1)
+          .transfer1155(
+            bora1155.target,
+            User2.address,
+            tokenIds[i],
+            amount,
+            emptyData
+          );
+        Util.showProgress(i + 1, numberOfTransaction);
+      }
+      Util.clearProgress();
+
+      // Step 3: Verify token balance of TBA is 0.
+      expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(0);
+
+      // Step 4: Verify User 2 token balance of each id is 1.000.
+      for (let i = 0; i < numberOfTransaction; i++) {
+        expect(
+          await bora1155.balanceOf(User2.address, tokenIds[i])
+        ).to.be.equal(amount);
+        Util.showProgress(i + 1, numberOfTransaction);
+      }
+      Util.clearProgress();
+
+      mlog.after(
+        "[TBA Account]",
+        "balance:",
+        await bora1155.tokenCountOf(tbaAddress)
+      );
+      mlog.after(
+        "[User 2]",
+        "balance:",
+        await bora1155.tokenCountOf(User2.address)
+      );
+    }
+
+    it("Should be successful when transfer1155() 500 times at the same time.", async function () {
+      await transfer1155(this.mlog, 500);
+    });
+
+    it("Should be successful when transfer1155() 5.000 times at the same time.", async function () {
+      await transfer1155(this.mlog, 5000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when transfer1155() 50.000 times at the same time.", async function () {
+      await transfer1155(this.mlog, 50000);
+    });
+
+    // TODO: Out of memory
+    it.skip("Should be successful when transfer1155() 500.000 times at the same time.", async function () {
+      await transfer1155(this.mlog, 500000);
+    });
+  });
 });
