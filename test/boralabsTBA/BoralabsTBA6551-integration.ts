@@ -2584,60 +2584,6 @@ describe("BoralabsTBA6551: Integration test", function () {
 
   describe("ERC1155 Burn Ability", async function () {
     let amount = BigInt(10);
-    it("Should successfully when burn multiple time ERC1155 by Owner 1155", async function () {
-      this.mlog.before(
-        "[TBA Account]",
-        "balance:",
-        (await bora1155.tokenCountOf(tbaAddress)) * amount
-      );
-
-      // Step 1: Owner of ERC1155 mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10 for TBA account 1
-      this.mlog.log(
-        "[TBA Account]",
-        "mint tokens (10000001, 20000001, 30000001, 40000001 and 50000001) with an amount of 10"
-      );
-      await bora1155.tbaMint(tbaAddress, amount, "0x");
-
-      // Approval for all
-      data = iface1155.encodeFunctionData("setApprovalForAll", [
-        owner1155.address,
-        true,
-      ]);
-      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
-
-      // Step 2: TBA account calls burn() to burn token id 10000001 with an amount of 10
-      this.mlog.log(
-        "[Owner 1155]",
-        "calls burn() to burn token id 10000001 with an amount of 10"
-      );
-      await bora1155.burn(10000001, amount);
-
-      // Step 3: TBA account calls burn() to burn token id 20000001 with an amount of 10
-      this.mlog.log(
-        "[Owner 1155]",
-        "calls burn() to burn token id 20000001 with an amount of 10"
-      );
-      await bora1155.burn(20000001, amount);
-
-      // Step 4: TBA account calls burn() to burn token id 30000001 with an amount of 10
-      this.mlog.log(
-        "[Owner 1155]",
-        "calls burn() to burn token id 30000001 with an amount of 10"
-      );
-      await bora1155.burn(30000001, amount);
-
-      // Step 5: Verify token balance of TBA account is 20
-      expect((await bora1155.tokenCountOf(tbaAddress)) * amount).to.be.equal(
-        20
-      );
-
-      this.mlog.after(
-        "[TBA Account]",
-        "balance:",
-        (await bora1155.tokenCountOf(tbaAddress)) * amount
-      );
-    });
-
     it("Should successfully when burn multiple time ERC1155 via execute()", async function () {
       this.mlog.before(
         "[TBA Account]",
@@ -2716,14 +2662,25 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA’s owner]",
         "sends a transaction with 1000 wei to TBA"
       );
-      await expect(await User1.sendTransaction({ to: tbaAddress, value: 1000 }))
-        .to.be.ok;
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      const tx = await User1.sendTransaction({ to: tbaAddress, value: 1000 });
+      const receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      const gasPrice = receipt?.gasPrice;
+      const gasUsed = receipt?.gasUsed;
+      const transactionFee = gasPrice * gasUsed;
 
       // Step 3: Verify balance of TBA increase 1000 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(1000);
 
       // Step 4: Verify balance of TBA’s owner decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 1000n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA Account]",

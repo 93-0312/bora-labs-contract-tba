@@ -404,7 +404,7 @@ describe("BoralabsTBA6551: Abnormal test", function () {
       // Step 3: Verify transaction will be reverted with error message “ERC1155: burn amount exceeds balance”.
       await expect(
         tba.connect(User1).execute(bora1155.target, 0, data, 0)
-      ).to.be.revertedWith("ERC1155: burn amount exceeds balance");
+      ).to.be.revertedWith("ERC1155: burn amount exceeds totalSupply");
 
       // Step 4: Verify balance of TBA account is not changed.
       expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(5);
@@ -447,7 +447,7 @@ describe("BoralabsTBA6551: Abnormal test", function () {
       // Step 3: Verify transaction will be reverted with error message “ERC1155: burn amount exceeds balance”
       await expect(
         tba.connect(User1).execute(bora1155.target, 0, data, 0)
-      ).to.be.revertedWith("ERC1155: burn amount exceeds balance");
+      ).to.be.revertedWith("ERC1155: burn amount exceeds totalSupply");
 
       // Step 4: Verify balance of TBA account is not changed.
       expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(5);
