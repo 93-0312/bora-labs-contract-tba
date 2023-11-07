@@ -1,4 +1,4 @@
-import { AbiCoder, Signer } from "ethers";
+import { AbiCoder, TransactionReceipt } from "ethers";
 import { ethers, network } from "hardhat";
 import { BigNumberish, Interface } from "ethers";
 import {
@@ -27,6 +27,14 @@ class Util {
 
   static toBoolean(number: Number) {
     return number != 0;
+  }
+
+  static calcTransactionFee(receipt: TransactionReceipt) {
+    const gasPrice = receipt?.gasPrice;
+    const gasUsed = receipt?.gasUsed;
+    const transactionFee = gasPrice * gasUsed;
+
+    return transactionFee;
   }
 
   static async multiMint721(
