@@ -2694,6 +2694,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         await ethers.provider.getBalance(User1.address)
       );
     });
+
     it("Should successfully when transfer multiple time ERC20 from another account", async function () {
       this.mlog.before(
         "[TBA Account]",
@@ -2707,17 +2708,29 @@ describe("BoralabsTBA6551: Integration test", function () {
         await ethers.provider.getBalance(User2.address)
       );
 
+      const user2BalanceBefore = await ethers.provider.getBalance(
+        User2.address
+      );
+
       // Step 1: User2 sends a transaction with 1000 wei to TBA
       // Step 2: Verify transaction should be successfully
       this.mlog.log("[User2]", "sends a transaction with 1000 wei to TBA");
-      await expect(await User2.sendTransaction({ to: tbaAddress, value: 1000 }))
-        .to.be.ok;
+      const tx = await User2.sendTransaction({ to: tbaAddress, value: 1000 });
+      const receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      const gasPrice = receipt?.gasPrice;
+      const gasUsed = receipt?.gasUsed;
+      const transactionFee = gasPrice * gasUsed;
 
       // Step 3: Verify balance of TBA increase 1000 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(1000);
 
       // Step 4: Verify balance of TBA’s owner decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User2.address)).to.equal(
+        user2BalanceBefore - 1000n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA Account]",
@@ -2749,30 +2762,61 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA.
       this.mlog.log("[TBA Account]", "receive 1000 wei from TBA’s owner");
-      await expect(
-        await User1.sendTransaction({
-          to: tbaAddress,
-          value: 1000,
-        })
-      ).to.be.ok;
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      let tx = await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+      let receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 2: TBA call transferCoin() to transfer 100 wei to TBA’s owner
       this.mlog.log("[TBA Account]", "send 100 wei to TBA’s owner");
-      await tba.connect(User1).transferCoin(User1.address, 100);
+      tx = await tba.connect(User1).transferCoin(User1.address, 100);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 3: TBA call transferCoin() to transfer 200 wei to TBA’s owner
       this.mlog.log("[TBA Account]", "send 200 wei to TBA’s owner");
-      await tba.connect(User1).transferCoin(User1.address, 200);
+      tx = await tba.connect(User1).transferCoin(User1.address, 200);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: TBA call transferCoin() to transfer 300 wei to TBA’s owner
       this.mlog.log("[TBA Account]", "send 300 wei to TBA’s owner");
-      await tba.connect(User1).transferCoin(User1.address, 300);
+      tx = await tba.connect(User1).transferCoin(User1.address, 300);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: Verify token balance of TBA account is increase 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
 
       // Step 6: Verify token balance of TBA’s owner is decrease 400 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 1000n - transactionFee + 600n
+      );
 
       this.mlog.after(
         "[TBA Account]",
@@ -2806,33 +2850,74 @@ describe("BoralabsTBA6551: Integration test", function () {
         await ethers.provider.getBalance(User1.address)
       );
 
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+
+      const user2BalanceBefore = await ethers.provider.getBalance(
+        User2.address
+      );
+
       // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA
       this.mlog.log("[TBA Account]", "receive 1000 wei from TBA’s owner");
-      await User1.sendTransaction({
+      let tx = await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
+      let receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 2: TBA call transferCoin() to transfer 100 wei User2
       this.mlog.log("[TBA Account]", "send 100 wei to User2");
-      await tba.connect(User1).transferCoin(User2.address, 100);
+      tx = await tba.connect(User1).transferCoin(User2.address, 100);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 3: TBA call transferCoin() to transfer 200 wei User2
       this.mlog.log("[TBA Account]", "send 200 wei to User2");
-      await tba.connect(User1).transferCoin(User2.address, 200);
+      tx = await tba.connect(User1).transferCoin(User2.address, 200);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: TBA call transferCoin() to transfer 300 wei User2
       this.mlog.log("[TBA Account]", "send 300 wei to User2");
-      await tba.connect(User1).transferCoin(User2.address, 300);
+      tx = await tba.connect(User1).transferCoin(User2.address, 300);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: Verify token balance of TBA account is increase 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
 
       // Step 6: Verify token balance of User2 is increase 600 wei
-      expect(await ethers.provider.getBalance(User2.address));
+      let receivedAmount = 600n;
+      expect(await ethers.provider.getBalance(User2.address)).to.equal(
+        user2BalanceBefore + receivedAmount
+      );
 
       // Step 7: Verify token balance of TBA’s owner is decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 1000n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA Account]",
@@ -2894,22 +2979,49 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 2: TBA’s owner sends a transaction with 1000 wei to TBA account 1.
       this.mlog.log("[TBA Account 1]", "receive 1000 wei from TBA’s owner");
-      await User1.sendTransaction({
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      let tx = await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
+      let receipt = await tx.wait();
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 3: Account 1 calls transferCoin() to transfer 100 wei to Account 2
       this.mlog.log("[TBA Account 1]", "send 100 wei to TBA Account 2");
-      await tba.connect(User1).transferCoin(tbaAddress2, 100);
+      tx = await tba.connect(User1).transferCoin(tbaAddress2, 100);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: TBA call transferCoin() to transfer 200 wei User2
       this.mlog.log("[TBA Account 1]", "send 200 wei to TBA Account 2");
-      await tba.connect(User1).transferCoin(tbaAddress2, 200);
+      tx = await tba.connect(User1).transferCoin(tbaAddress2, 200);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: TBA call transferCoin() to transfer 300 wei User2
       this.mlog.log("[TBA Account 1]", "send 300 wei to TBA Account 2");
-      await tba.connect(User1).transferCoin(tbaAddress2, 300);
+      tx = await tba.connect(User1).transferCoin(tbaAddress2, 300);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 6: Verify token balance of TBA account is increase 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
@@ -2918,7 +3030,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       expect(await ethers.provider.getBalance(tbaAddress2)).to.be.equal(600);
 
       // Step 8: Verify token balance of TBA’s owner is decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.be.equal(
+        user1BalanceBefore - transactionFee - 1000n
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -2981,22 +3095,54 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 2: TBA’s owner sends a transaction with 1000 wei to TBA account 1.
       this.mlog.log("[TBA Account 1]", "receive 1000 wei from TBA 1's owner");
-      await User1.sendTransaction({
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      let tx = await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
+      let receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 3: Account 1 calls transferCoin() to transfer 100 wei to Account 2
       this.mlog.log("[TBA Account 1]", "send 100 wei to TBA Account 2");
-      await tba.connect(User1).transferCoin(tbaAddress2, 100);
+      tx = await tba.connect(User1).transferCoin(tbaAddress2, 100);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: Account 1 calls transferCoin() to transfer 200 wei to Account 2
       this.mlog.log("[TBA Account 1]", "send 200 wei to TBA Account 2");
-      await tba.connect(User1).transferCoin(tbaAddress2, 200);
+      tx = await tba.connect(User1).transferCoin(tbaAddress2, 200);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: Account 1 calls transferCoin() to transfer 300 wei to Account 2
       this.mlog.log("[TBA Account 1]", "send 300 wei to TBA Account 2");
-      await tba.connect(User1).transferCoin(tbaAddress2, 300);
+      tx = await tba.connect(User1).transferCoin(tbaAddress2, 300);
+
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 6: Verify token balance of TBA account is increase 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
@@ -3005,7 +3151,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       expect(await ethers.provider.getBalance(tbaAddress2)).to.be.equal(600);
 
       // Step 8: Verify token balance of TBA’s owner is decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 1000n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -3044,12 +3192,20 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA.
       this.mlog.log("[TBA Account]", "receive 1000 wei from TBA’s owner");
-      expect(
-        await User1.sendTransaction({
-          to: tbaAddress,
-          value: 1000,
-        })
-      ).to.be.ok;
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      let tx = await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+      let receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 2: Account 1 calls execute() to transfer 100 wei to User2
       this.mlog.log(
@@ -3060,7 +3216,14 @@ describe("BoralabsTBA6551: Integration test", function () {
         User2.address,
         100,
       ]);
-      await tba.connect(User1).execute(User2.address, 100, data, 0);
+      tx = await tba.connect(User1).execute(User2.address, 100, data, 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 3: Account 1 calls execute() to transfer 200 wei to User2
       this.mlog.log(
@@ -3071,7 +3234,14 @@ describe("BoralabsTBA6551: Integration test", function () {
         User2.address,
         200,
       ]);
-      await tba.connect(User1).execute(User2.address, 200, data, 0);
+      tx = await tba.connect(User1).execute(User2.address, 200, data, 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: Account 1 calls execute() to transfer 300 wei to User2
       this.mlog.log(
@@ -3082,7 +3252,14 @@ describe("BoralabsTBA6551: Integration test", function () {
         User2.address,
         300,
       ]);
-      await tba.connect(User1).execute(User2.address, 300, data, 0);
+      tx = await tba.connect(User1).execute(User2.address, 300, data, 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: Verify token balance of TBA account is increase 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
@@ -3105,7 +3282,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       // Step 7: Verify token balance of TBA’s owner is decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 1000n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA’s owner]",
@@ -3129,12 +3308,20 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 1: TBA’s owner sends a transaction with 1000 wei to TBA.
       this.mlog.log("[TBA Account]", "receive 1000 wei from TBA’s owner");
-      expect(
-        await User1.sendTransaction({
-          to: tbaAddress,
-          value: 1000,
-        })
-      ).to.be.ok;
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      let tx = await User1.sendTransaction({
+        to: tbaAddress,
+        value: 1000,
+      });
+      let receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 2: TBA call execute() to transfer 100 wei to TBA’s owner
       this.mlog.log(
@@ -3145,7 +3332,14 @@ describe("BoralabsTBA6551: Integration test", function () {
         User1.address,
         100,
       ]);
-      await tba.connect(User1).execute(User1.address, 100, data, 0);
+      tx = await tba.connect(User1).execute(User1.address, 100, data, 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 3: TBA call execute() to transfer 200 wei to TBA’s owner
       this.mlog.log(
@@ -3156,7 +3350,14 @@ describe("BoralabsTBA6551: Integration test", function () {
         User1.address,
         200,
       ]);
-      await tba.connect(User1).execute(User1.address, 200, data, 0);
+      tx = await tba.connect(User1).execute(User1.address, 200, data, 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: TBA call execute() to transfer 300 wei to TBA’s owner
       this.mlog.log(
@@ -3167,7 +3368,14 @@ describe("BoralabsTBA6551: Integration test", function () {
         User1.address,
         300,
       ]);
-      await tba.connect(User1).execute(User1.address, 300, data, 0);
+      tx = await tba.connect(User1).execute(User1.address, 300, data, 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: Verify token balance of TBA account is increase 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
@@ -3179,7 +3387,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
 
       // Step 6: Verify token balance of TBA’s owner is decrease 400 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 400n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA’s owner]",
@@ -3229,31 +3439,62 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 2: TBA’s owner sends a transaction with 1000 wei to TBA account 1.
       this.mlog.log("[TBA Account 1]", "receive 1000 wei from TBA’s owner");
-      await User1.sendTransaction({
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      let tx = await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
+      let receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 3: Account 1 calls execute() to transfer 100 wei to Account 2
       this.mlog.log(
         "[TBA Account 1]",
         "call execute() to send 100 wei to TBA Account 2"
       );
-      await tba.connect(User1).execute(tbaAddress2, 100, "0x", 0);
+      tx = await tba.connect(User1).execute(tbaAddress2, 100, "0x", 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: Account 1 calls execute() to transfer 200 wei to Account 2
       this.mlog.log(
         "[TBA Account 1]",
         "call execute() to send 200 wei to TBA Account 2"
       );
-      await tba.connect(User1).execute(tbaAddress2, 200, "0x", 0);
+      tx = await tba.connect(User1).execute(tbaAddress2, 200, "0x", 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: Account 1 calls execute() to transfer 300 wei to Account 2
       this.mlog.log(
         "[TBA Account 1]",
         "call execute() to send 300 wei to TBA Account 2"
       );
-      await tba.connect(User1).execute(tbaAddress2, 300, "0x", 0);
+      tx = await tba.connect(User1).execute(tbaAddress2, 300, "0x", 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 6: Verify token balance of TBA account is increase 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
@@ -3262,7 +3503,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       expect(await ethers.provider.getBalance(tbaAddress2)).to.be.equal(600);
 
       // Step 8: Verify token balance of TBA’s owner is decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 1000n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -3325,31 +3568,62 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 2: TBA’s owner sends a transaction with 1000 wei to TBA account 1.
       this.mlog.log("[TBA Account 1]", "receive 1000 wei from TBA’s owner");
-      await User1.sendTransaction({
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      let tx = await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
+      let receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 3: Account 1 calls execute() to transfer 100 wei to Account 2
       this.mlog.log(
         "[TBA Account 1]",
         "call execute() to send 100 wei to TBA Account 2"
       );
-      await tba.connect(User1).execute(tbaAddress2, 100, "0x", 0);
+      tx = await tba.connect(User1).execute(tbaAddress2, 100, "0x", 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: Account 1 calls execute() to transfer 200 wei to Account 2
       this.mlog.log(
         "[TBA Account 1]",
         "call execute() to send 200 wei to TBA Account 2"
       );
-      await tba.connect(User1).execute(tbaAddress2, 200, "0x", 0);
+      tx = await tba.connect(User1).execute(tbaAddress2, 200, "0x", 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: Account 1 calls execute() to transfer 300 wei to Account 2
       this.mlog.log(
         "[TBA Account 1]",
         "call execute() to send 300 wei to TBA Account 2"
       );
-      await tba.connect(User1).execute(tbaAddress2, 300, "0x", 0);
+      tx = await tba.connect(User1).execute(tbaAddress2, 300, "0x", 0);
+      receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 6: Verify token balance of TBA account is increase 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
@@ -3358,7 +3632,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       expect(await ethers.provider.getBalance(tbaAddress2)).to.be.equal(600);
 
       // Step 8: Verify token balance of TBA’s owner is decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 1000n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -3407,7 +3683,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       this.mlog.log("[TBA Account]", "send 300 wei to zero address");
       await tba.connect(User1).transferCoin(ethers.ZeroAddress, 300);
 
-      // Step 5: Verify token balance of TBA account is increase 400 wei
+      // Step 5: Verify token balance of TBA account is 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
 
       this.mlog.after(
@@ -3431,7 +3707,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         value: 1000,
       });
 
-      // Step 2: TBA account calls transferCoin() with address to is zero address and amount is 100 wei
+      // Step 2: TBA calls execute() to burn with address to is zero address and amount is 100 wei
       this.mlog.log(
         "[TBA Account]",
         "call execute() to send 100 wei to zero address"
@@ -3442,7 +3718,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       await tba.connect(User1).execute(ethers.ZeroAddress, 100, data, 0);
 
-      // Step 3: TBA account calls transferCoin() with address to is zero address and amount is 200 wei
+      // Step 3: TBA calls execute() to burn with address to is zero address and amount is 200 wei
       this.mlog.log(
         "[TBA Account]",
         "call execute() to send 200 wei to zero address"
@@ -3453,7 +3729,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       await tba.connect(User1).execute(ethers.ZeroAddress, 200, data, 0);
 
-      // Step 3: TBA account calls transferCoin() with address to is zero address and amount is 300 wei
+      // Step 3: TBA calls execute() to burn with address to is zero address and amount is 300 wei
       this.mlog.log(
         "[TBA Account]",
         "call execute() to send 300 wei to zero address"
@@ -3464,7 +3740,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       await tba.connect(User1).execute(ethers.ZeroAddress, 300, data, 0);
 
-      // Step 5: Verify token balance of TBA account is increase 400 wei
+      // Step 5: Verify token balance of TBA account is 400 wei
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(400);
 
       this.mlog.after(
@@ -3526,7 +3802,17 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "TBA’s owner transfers 1000 wei for TBA Account"
       );
-      await User1.sendTransaction({ to: tbaAddress, value: 1000 });
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      const tx = await User1.sendTransaction({ to: tbaAddress, value: 1000 });
+      const receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      const gasPrice = receipt?.gasPrice;
+      const gasUsed = receipt?.gasUsed;
+      const transactionFee = gasPrice * gasUsed;
 
       // Step 5: Verify TBA token balance of ERC20 is 10
       await expect(await bora20.balanceOf(tbaAddress)).to.be.equal(10);
@@ -3538,10 +3824,14 @@ describe("BoralabsTBA6551: Integration test", function () {
       await expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(5);
 
       // Step 8: Verify TBA balance is increase 1000 wei
-      await expect(await ethers.provider.getBalance(tbaAddress));
+      await expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(
+        1000
+      );
 
       // Step 9: Verify TBA’s owner balance is decrease 1000 wei
-      await expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.equal(
+        user1BalanceBefore - 1000n - transactionFee
+      );
 
       this.mlog.after(
         "[TBA Account]",
@@ -3652,7 +3942,18 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 8: User2 transfers 1000 wei to TBA account
       this.mlog.log("[TBA Account]", "User2 transfers 1000 wei to TBA account");
-      await User2.sendTransaction({ to: tbaAddress, value: 1000 });
+      const user2BalanceBefore = await ethers.provider.getBalance(
+        User2.address
+      );
+      const tx = await User2.sendTransaction({ to: tbaAddress, value: 1000 });
+
+      const receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
+
+      // Calc transaction fee
+      const gasPrice = receipt?.gasPrice;
+      const gasUsed = receipt?.gasUsed;
+      const transactionFee = gasPrice * gasUsed;
 
       // Step 9: Verify User2 token balance of ERC20 is 0
       await expect(await bora20.balanceOf(User2.address)).to.be.equal(0);
@@ -3664,7 +3965,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       await expect(await bora1155.tokenCountOf(User2.address)).to.be.equal(0);
 
       // Step 12: Verify User2 balance is increase 0 wei
-      await expect(await ethers.provider.getBalance(User2.address));
+      await expect(await ethers.provider.getBalance(User2.address)).to.be.equal(
+        user2BalanceBefore - 1000n - transactionFee
+      );
 
       // Step 13: Verify TBA token balance of ERC20 is 10
       await expect(await bora20.balanceOf(tbaAddress)).to.be.equal(10);
@@ -3676,10 +3979,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       await expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(5);
 
       // Step 16: Verify TBA balance is increase 1000 wei
-      await expect(await ethers.provider.getBalance(tbaAddress));
-
-      // Step 17: Verify TBA’s owner balance is decrease 1000 wei
-      await expect(await ethers.provider.getBalance(User1.address));
+      await expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(
+        1000
+      );
 
       this.mlog.after(
         "[TBA Account]",
@@ -3839,10 +4141,22 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "TBA call transferCoin() to transfer 1000 wei to TBA’s owner"
       );
-      await tba.connect(User1).transferCoin(User1.address, 1000);
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+      const tx = await tba.connect(User1).transferCoin(User1.address, 1000);
+      const receipt = await tx.wait();
+      expect(receipt?.status).to.be.equal(1);
 
-      // Step 9: Verify TBA’s owner token balance of ERC20 is 10
-      await expect(await bora20.balanceOf(User1.address)).to.be.equal(10);
+      // Calc transaction fee
+      const gasPrice = receipt?.gasPrice;
+      const gasUsed = receipt?.gasUsed;
+      const transactionFee = gasPrice * gasUsed;
+
+      // Step 9: Verify TBA’s owner balance is increase 1000 wei
+      await expect(await ethers.provider.getBalance(User1.address)).to.be.equal(
+        user1BalanceBefore + 1000n - BigInt(transactionFee)
+      );
 
       // Step 10: Verify TBA’s owner token balance of ERC721 is 6
       await expect(await bora721.balanceOf(User1.address)).to.be.equal(6);
@@ -3850,8 +4164,8 @@ describe("BoralabsTBA6551: Integration test", function () {
       // Step 11: Verify TBA’s owner token balance of ERC1155 is 5
       await expect(await bora1155.tokenCountOf(User1.address)).to.be.equal(5);
 
-      // Step 12: Verify TBA’s owner balance is increase 0 wei
-      await expect(await ethers.provider.getBalance(User1.address));
+      // Step 12: Verify TBA’s owner token balance of ERC20 is 10
+      await expect(await bora20.balanceOf(User1.address)).to.be.equal(10);
 
       // Step 13: Verify TBA token balance of ERC20 is 0
       await expect(await bora20.balanceOf(tbaAddress)).to.be.equal(0);
@@ -3862,8 +4176,8 @@ describe("BoralabsTBA6551: Integration test", function () {
       // Step 15: Verify TBA token balance of ERC1155 is 0
       await expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(0);
 
-      // Step 16: Verify TBA balance is increase 0 wei
-      await expect(await ethers.provider.getBalance(tbaAddress));
+      // Step 16: Verify TBA balance is 0 wei
+      await expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(0);
 
       this.mlog.after(
         "[TBA Account]",
@@ -4032,10 +4346,15 @@ describe("BoralabsTBA6551: Integration test", function () {
         "[TBA Account]",
         "TBA call transferCoin() to transfer 1000 wei to User2"
       );
+      const user2BalanceBefore = await ethers.provider.getBalance(
+        User2.address
+      );
       await tba.connect(User1).transferCoin(User2.address, 1000);
 
-      // Step 9: Verify User2 token balance of ERC20 is 10
-      await expect(await bora20.balanceOf(User2.address)).to.be.equal(10);
+      // Step 9: Verify User2 balance is increase 1000 wei
+      await expect(await ethers.provider.getBalance(User2.address)).to.be.equal(
+        user2BalanceBefore + 1000n
+      );
 
       // Step 10: Verify User2 token balance of ERC721 is 3
       await expect(await bora721.balanceOf(User2.address)).to.be.equal(3);
@@ -4043,8 +4362,8 @@ describe("BoralabsTBA6551: Integration test", function () {
       // Step 11: Verify User2 token balance of ERC1155 is 5
       await expect(await bora1155.tokenCountOf(User2.address)).to.be.equal(5);
 
-      // Step 12: Verify User2 balance is increase 0 wei
-      await expect(await ethers.provider.getBalance(User2.address));
+      // Step 12: Verify User2 token balance of ERC20 is 10
+      await expect(await bora20.balanceOf(User2.address)).to.be.equal(10);
 
       // Step 13: Verify TBA token balance of ERC20 is 0
       await expect(await bora20.balanceOf(tbaAddress)).to.be.equal(0);
@@ -4055,11 +4374,8 @@ describe("BoralabsTBA6551: Integration test", function () {
       // Step 15: Verify TBA token balance of ERC1155 is 0
       await expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(0);
 
-      // Step 16: Verify TBA balance is increase 0 wei
-      await expect(await ethers.provider.getBalance(tbaAddress));
-
-      // Step 17: Verify TBA’s owner balance is decrease 1000 wei
-      await expect(await ethers.provider.getBalance(User1.address));
+      // Step 16: Verify TBA balance is 0 wei
+      await expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(0);
 
       this.mlog.after(
         "[TBA Account]",
@@ -4516,6 +4832,10 @@ describe("BoralabsTBA6551: Integration test", function () {
         await ethers.provider.getBalance(User2.address)
       );
 
+      const user2BalanceBefore = await ethers.provider.getBalance(
+        User2.address
+      );
+
       // Step 1: Owner of ERC20 mint 10 tokens for TBA account
       this.mlog.log("[TBA Account 1]", "mint 10 tokens ERC20");
       await bora20.mint(tbaAddress, 10);
@@ -4630,7 +4950,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       expect(await bora1155.tokenCountOf(User2.address)).to.be.equal(5);
 
       // Step 12: Verify User2 balance is increase 1000 wei
-      expect(await ethers.provider.getBalance(User2.address));
+      expect(await ethers.provider.getBalance(User2.address)).to.be.equal(
+        user2BalanceBefore + 1000n
+      );
 
       // Step 13: Verify User2 token balance of ERC20 is 0
       expect(await bora20.balanceOf(tbaAddress)).to.be.equal(0);
@@ -4694,24 +5016,52 @@ describe("BoralabsTBA6551: Integration test", function () {
         await ethers.provider.getBalance(User1.address)
       );
 
+      const user1BalanceBefore = await ethers.provider.getBalance(
+        User1.address
+      );
+
       // Step 1: Owner of ERC20 mint 10 tokens for TBA account
       this.mlog.log("[TBA Account]", "mint 10 tokens ERC20");
-      await bora20.mint(tbaAddress, 10);
+      let tx = await bora20.mint(tbaAddress, 10);
+      let receipt = await tx.wait();
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 2: Owner of ERC721 mint 3 tokens for TBA account
       this.mlog.log("[TBA Account]", "mint 3 tokens ERC721");
-      await bora721.tbaMint(tbaAddress);
+      tx = await bora721.tbaMint(tbaAddress);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 3: Owner of ERC1155 mint 5 tokens for TBA account
       this.mlog.log("[TBA Account]", "mint 5 tokens ERC1155");
-      await bora1155.tbaMint(tbaAddress, 1, "0x");
+      tx = await bora1155.tbaMint(tbaAddress, 1, "0x");
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 4: TBA’s owner transfers 1000 wei for TBA account
       this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for TBA account");
-      await User1.sendTransaction({
+      tx = await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 5: TBA account 1 call execute() to transfer 10 tokens to TBA’s owner
       this.mlog.log(
@@ -4719,7 +5069,15 @@ describe("BoralabsTBA6551: Integration test", function () {
         "call execute() to transfer 10 tokens to TBA’s owner"
       );
       data = iface1155.encodeFunctionData("transfer", [User1.address, 10]);
-      await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora20.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 6: TBA account 1 call execute() to transfer 3 tokens to TBA’s owner
       this.mlog.log(
@@ -4731,19 +5089,45 @@ describe("BoralabsTBA6551: Integration test", function () {
         User1.address,
         10000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("transferFrom", [
         tbaAddress,
         User1.address,
         20000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("transferFrom", [
         tbaAddress,
         User1.address,
         30000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 7: TBA account 1 call execute() to transfer 5 tokens to TBA’s owner
       this.mlog.log(
@@ -4757,7 +5141,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         User1.address,
@@ -4765,7 +5158,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         User1.address,
@@ -4773,7 +5175,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         User1.address,
@@ -4781,7 +5192,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         User1.address,
@@ -4789,7 +5209,15 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 8: TBA account 1 call transferCoin() to transfer 1000 wei to TBA’s owner
       this.mlog.log(
@@ -4800,7 +5228,13 @@ describe("BoralabsTBA6551: Integration test", function () {
         User1.address,
         amount,
       ]);
-      await tba.connect(User1).execute(User1.address, 1000, data, 0);
+      tx = await tba.connect(User1).execute(User1.address, 1000, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 9: Verify TBA’s owner token balance of ERC20 is 10
       expect(await bora20.balanceOf(User1.address)).to.be.equal(10);
@@ -4811,8 +5245,10 @@ describe("BoralabsTBA6551: Integration test", function () {
       // Step 11: Verify TBA’s owner token balance of ERC1155 is 5
       expect(await bora1155.tokenCountOf(User1.address)).to.be.equal(5);
 
-      // Step 12: Verify TBA owner balance is increase 1000 wei
-      expect(await ethers.provider.getBalance(User2.address));
+      // Step 12: Verify TBA owner balance is increase 0 wei
+      expect(await ethers.provider.getBalance(User1.address)).to.be.equal(
+        BigInt(user1BalanceBefore) - BigInt(transactionFee)
+      );
 
       // Step 13: Verify User2 token balance of ERC20 is 0
       expect(await bora20.balanceOf(tbaAddress)).to.be.equal(0);
@@ -4865,13 +5301,15 @@ describe("BoralabsTBA6551: Integration test", function () {
         );
 
       // Get TBA account 2 address
-      tbaAddress2 = await bora6551Registry.account(
-        bora6551Account.getAddress(),
-        network.config.chainId as BigNumberish,
-        bora721.getAddress(),
-        20000001,
-        0
-      );
+      tbaAddress2 = await bora6551Registry
+        .connect(User2)
+        .account(
+          bora6551Account.getAddress(),
+          network.config.chainId as BigNumberish,
+          bora721.getAddress(),
+          20000001,
+          0
+        );
 
       this.mlog.before(
         "[TBA Account 1]",
@@ -4910,11 +5348,18 @@ describe("BoralabsTBA6551: Integration test", function () {
       await bora1155.tbaMint(tbaAddress, 1, "0x");
 
       // Step 5: TBA’s owner transfers 1000 wei for Account 1
+      let user1BalanceBefore = await ethers.provider.getBalance(User1.address);
       this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for Account 1");
-      await User1.sendTransaction({
+      let tx = await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
+      let receipt = await tx.wait();
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 6: Account 1 call execute() to transfer 10 tokens to Account 2
       this.mlog.log(
@@ -4922,7 +5367,15 @@ describe("BoralabsTBA6551: Integration test", function () {
         "call execute() to transfer 10 tokens to Account 2"
       );
       data = iface20.encodeFunctionData("transfer", [tbaAddress2, 10]);
-      await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora20.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 7: Account 1 call execute() to transfer 3 tokens to Account 2
       this.mlog.log(
@@ -4934,19 +5387,45 @@ describe("BoralabsTBA6551: Integration test", function () {
         tbaAddress2,
         10000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface721.encodeFunctionData("transferFrom", [
         tbaAddress,
         tbaAddress2,
         20000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface721.encodeFunctionData("transferFrom", [
         tbaAddress,
         tbaAddress2,
         30000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 8: Account 1 call execute() to transfer 5 tokens to Account 2
       this.mlog.log(
@@ -4960,7 +5439,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         tbaAddress2,
@@ -4968,7 +5456,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         tbaAddress2,
@@ -4976,7 +5473,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         tbaAddress2,
@@ -4984,7 +5490,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         tbaAddress2,
@@ -4992,10 +5507,24 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 9: Account 1 call execute() to transfer 1000 wei to Account 2
-      await tba.connect(User1).execute(tbaAddress2, 1000, "0x", 0);
+      tx = await tba.connect(User1).execute(tbaAddress2, 1000, "0x", 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 10: Verify Account 2 token balance of ERC20 is 10
       expect(await bora20.balanceOf(tbaAddress2)).to.be.equal(10);
@@ -5022,7 +5551,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(0);
 
       // Step 18: Verify TBA’s owner balance is decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.be.equal(
+        BigInt(user1BalanceBefore) - BigInt(transactionFee) - 1000n
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -5108,11 +5639,18 @@ describe("BoralabsTBA6551: Integration test", function () {
       await bora1155.tbaMint(tbaAddress, 1, "0x");
 
       // Step 5: TBA’s owner transfers 1000 wei for Account 1
+      let user1BalanceBefore = await ethers.provider.getBalance(User1.address);
       this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for Account 1");
-      await User1.sendTransaction({
+      let tx = await User1.sendTransaction({
         to: tbaAddress,
         value: 1000,
       });
+      let receipt = await tx.wait();
+
+      // Calc transaction fee
+      let gasPrice = receipt?.gasPrice;
+      let gasUsed = receipt?.gasUsed;
+      let transactionFee = gasPrice * gasUsed;
 
       // Step 6: Account 1 call execute() to transfer 10 tokens to Account 2
       this.mlog.log(
@@ -5120,7 +5658,15 @@ describe("BoralabsTBA6551: Integration test", function () {
         "call execute() to transfer 10 tokens to Account 2"
       );
       data = iface20.encodeFunctionData("transfer", [tbaAddress2, 10]);
-      await tba.connect(User1).execute(await bora20.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora20.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 7: Account 1 call execute() to transfer 3 tokens to Account 2
       this.mlog.log(
@@ -5132,19 +5678,45 @@ describe("BoralabsTBA6551: Integration test", function () {
         tbaAddress2,
         10000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface721.encodeFunctionData("transferFrom", [
         tbaAddress,
         tbaAddress2,
         20000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface721.encodeFunctionData("transferFrom", [
         tbaAddress,
         tbaAddress2,
         30000002,
       ]);
-      await tba.connect(User1).execute(await bora721.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora721.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 8: Account 1 call execute() to transfer 5 tokens to Account 2
       this.mlog.log(
@@ -5158,7 +5730,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         tbaAddress2,
@@ -5166,7 +5747,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         tbaAddress2,
@@ -5174,7 +5764,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         tbaAddress2,
@@ -5182,7 +5781,16 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
+
       data = iface1155.encodeFunctionData("safeTransferFrom", [
         tbaAddress,
         tbaAddress2,
@@ -5190,10 +5798,24 @@ describe("BoralabsTBA6551: Integration test", function () {
         1,
         "0x",
       ]);
-      await tba.connect(User1).execute(await bora1155.getAddress(), 0, data, 0);
+      tx = await tba
+        .connect(User1)
+        .execute(await bora1155.getAddress(), 0, data, 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 9: Account 1 call execute() to transfer 1000 wei to Account 2
-      await tba.connect(User1).execute(tbaAddress2, 1000, "0x", 0);
+      tx = await tba.connect(User1).execute(tbaAddress2, 1000, "0x", 0);
+      receipt = await tx.wait();
+
+      // Calc transaction fee
+      gasPrice = receipt?.gasPrice;
+      gasUsed = receipt?.gasUsed;
+      transactionFee += gasPrice * gasUsed;
 
       // Step 10: Verify Account 2 token balance of ERC20 is 10
       expect(await bora20.balanceOf(tbaAddress2)).to.be.equal(10);
@@ -5220,7 +5842,9 @@ describe("BoralabsTBA6551: Integration test", function () {
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(0);
 
       // Step 18: Verify TBA’s owner balance is decrease 1000 wei
-      expect(await ethers.provider.getBalance(User1.address));
+      expect(await ethers.provider.getBalance(User1.address)).to.be.equal(
+        user1BalanceBefore - transactionFee - 1000n
+      );
 
       this.mlog.after(
         "[TBA Account 1]",
@@ -5249,96 +5873,6 @@ describe("BoralabsTBA6551: Integration test", function () {
   });
 
   describe("Multiple Token Burn Ability", async function () {
-    it("Should successfully when burn 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei", async function () {
-      this.mlog.before(
-        "[TBA Account]",
-        "ERC20 balance:",
-        await bora20.balanceOf(tbaAddress),
-        "ERC721 balance:",
-        await bora721.balanceOf(tbaAddress),
-        "ERC1155 balance:",
-        await bora1155.tokenCountOf(tbaAddress),
-        "Native token balance:",
-        await ethers.provider.getBalance(tbaAddress)
-      );
-
-      // Step 1: Owner of ERC20 mint 10 tokens for TBA account
-      this.mlog.log("[TBA Account]", "mint 10 tokens ERC20");
-      await bora20.mint(tbaAddress, 10);
-
-      // Step 2: Owner of ERC721 mint 3 tokens for TBA account
-      this.mlog.log("[TBA Account]", "mint 3 tokens ERC721");
-      await bora721.tbaMint(tbaAddress);
-
-      // Step 3: Owner of ERC1155 mint 5 tokens for TBA account
-      this.mlog.log("[TBA Account]", "mint 5 tokens ERC1155");
-      await bora1155.tbaMint(tbaAddress, 10, "0x");
-
-      // Step 4: TBA’s owner transfers 1000 wei for TBA account
-      this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for TBA account");
-      await User1.sendTransaction({
-        to: tbaAddress,
-        value: 1000,
-      });
-
-      // Step 5: TBA calls BoralabsTBA20.burn() to burn 10 tokens
-      this.mlog.log(
-        "[TBA Account]",
-        "calls BoralabsTBA20.burn() to burn 10 tokens"
-      );
-      data = iface20.encodeFunctionData("approve", [owner20.address, 10]);
-      await tba.connect(User1).execute(bora20.target, 0, data, 0);
-      await bora20.burnFrom(tbaAddress, 10);
-
-      // Step 6: TBA calls BoralabsTBA721.burn() to burn 3 tokens
-      // await bora721.burn(10000002);
-      // await bora721.burn(20000002);
-      // await bora721.burn(30000002);
-
-      // Step 7: TBA calls BoralabsTBA1155.burn() to burn 5 tokens
-      this.mlog.log(
-        "[TBA Account 1]",
-        "calls BoralabsTBA1155.burn() to burn 5 tokens"
-      );
-      data = iface1155.encodeFunctionData("setApprovalForAll", [
-        owner1155.address,
-        true,
-      ]);
-      await tba.connect(User1).execute(bora1155.target, 0, data, 0);
-      await bora1155.burn(tbaAddress, 10);
-
-      // Step 8: TBA calls transferCoin() with address to is zero address to burn 1000 wei
-      this.mlog.log(
-        "[TBA Account 1]",
-        "calls transferCoin() with address to is zero address to burn 1000 wei"
-      );
-      await tba.connect(User1).transferCoin(ethers.ZeroAddress, 1000);
-
-      // Step 9: Verify TBA token balance of ERC20 is 0
-      expect(await bora20.balanceOf(tbaAddress)).to.be.equal(0);
-
-      // Step 10: Verify TBA token balance of ERC721 is 0
-      // expect(await bora721.balanceOf(tbaAddress)).to.be.equal(0);
-
-      // Step 11: Verify TBA token balance of ERC1155 is 0
-      expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(0);
-
-      // Step 12: Verify TBA balance is decrease 1000 wei
-      expect(await ethers.provider.getBalance(tbaAddress));
-
-      this.mlog.after(
-        "[TBA Account]",
-        "ERC20 balance:",
-        await bora20.balanceOf(tbaAddress),
-        "ERC721 balance:",
-        await bora721.balanceOf(tbaAddress),
-        "ERC1155 balance:",
-        await bora1155.tokenCountOf(tbaAddress),
-        "Native token balance:",
-        await ethers.provider.getBalance(tbaAddress)
-      );
-    });
-
     it("Should successfully when burn 10 tokens ERC20, 3 tokens ERC721, 5 tokens ERC1155 and 1000 wei via execute()", async function () {
       this.mlog.before(
         "[TBA Account]",
@@ -5362,7 +5896,7 @@ describe("BoralabsTBA6551: Integration test", function () {
 
       // Step 3: Owner of ERC1155 mint 5 tokens for TBA account
       this.mlog.log("[TBA Account]", "mint 5 tokens ERC1155");
-      await bora1155.tbaMint(tbaAddress, 10, "0x");
+      await bora1155.tbaMint(tbaAddress, 1, "0x");
 
       // Step 4: TBA’s owner transfers 1000 wei for TBA account
       this.mlog.log("[TBA’s Owner]", "transfers 1000 wei for TBA account");
@@ -5414,7 +5948,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       expect(await bora1155.tokenCountOf(tbaAddress)).to.be.equal(0);
 
       // Step 12: Verify TBA balance is decrease 1000 wei
-      expect(await ethers.provider.getBalance(tbaAddress));
+      expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(0);
 
       this.mlog.after(
         "[TBA Account]",

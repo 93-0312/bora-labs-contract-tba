@@ -69,7 +69,7 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
      * @param id token id
      * @param amount amount to burn
      */
-    function burn(uint256 id, uint256 amount) external onlyApprovedOrOwner(_msgSender()) {
+    function burn(uint256 id, uint256 amount) external {
         super._burn(_msgSender(), id, amount);
     }
 
@@ -183,13 +183,5 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
         } else {
             _tokenIds[account].remove(tokenId);
         }
-    }
-
-    // =========================================================================================== //
-    // MODIFIER
-    // =========================================================================================== //
-    modifier onlyApprovedOrOwner(address from) {
-        require(isApprovedForAll(from, _msgSender()), "Caller is not token owner or approved");
-        _;
     }
 }

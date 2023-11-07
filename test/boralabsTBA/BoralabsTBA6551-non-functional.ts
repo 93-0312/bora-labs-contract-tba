@@ -1216,6 +1216,8 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         await bora1155.tokenCountOf(User2)
       );
 
+      const user2BalanceBefore = await ethers.provider.getBalance(User2);
+
       // Execute
       // Step 1: Owner of ERC20 mint token ERC20 with an amount of 1.000 for TBA account
       this.mlog.log(
@@ -1246,7 +1248,9 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       expect(await ethers.provider.getBalance(tbaAddress)).to.be.equal(0);
 
       // Step 6: Verify User 2 balance increase 1000 wei
-      expect(await ethers.provider.getBalance(User2));
+      expect(await ethers.provider.getBalance(User2)).to.be.equal(
+        user2BalanceBefore + 1000n
+      );
 
       // Transfer 20
       // Step 7: User 1 calls transfer20() in TBA to transfer token ERC20 with amount is 1.000 to User 2
