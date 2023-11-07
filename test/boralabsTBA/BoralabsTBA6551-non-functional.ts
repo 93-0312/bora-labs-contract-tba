@@ -33,6 +33,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
 
   let owner20: HardhatEthersSigner;
   let owner721: HardhatEthersSigner;
+  let owner1155: HardhatEthersSigner;
 
   let tbaAddress: string;
   let tba: BoralabsTBA6551Account;
@@ -71,7 +72,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     ({ bora721, owner721 } = await loadFixture(deployBora721));
 
     // deploy bora1155
-    ({ bora1155 } = await loadFixture(deployBora1155));
+    ({ bora1155, owner1155 } = await loadFixture(deployBora1155));
 
     // deploy bora 6551 account
     ({ bora6551Account } = await loadFixture(deployBora6551Account));
@@ -2312,6 +2313,947 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     // Out of memory
     it.skip("Should be successful when 100.000 users burn at the same time.", async function () {
       await burn(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing - Execute - Mint ERC1155", async function () {
+    async function mint(mlog: mlog, numberOfUser: number) {
+      // Step 1: Owner of ERC721 mint ${numberOfUser * 3} tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721] mint",
+        numberOfUser * 3,
+        "tokens for",
+        numberOfUser,
+        "users"
+      );
+      let users = await Util.createMultiUser(numberOfUser);
+      const mintTimes = 1;
+      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+        users,
+        mintTimes,
+        bora721
+      );
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser * 3} TBA accounts
+      mlog.log(
+        `[${numberOfUser} User]`,
+        "users use createAccount() to create",
+        numberOfUser * 3,
+        "TBA accounts"
+      );
+      let tbaAccountsByUser: string[][] = [];
+      let tbasOfUser: string[] = [];
+
+      let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
+      let tbaContracts: BoralabsTBA6551Account[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+          bora6551Account.target,
+          bora6551Registry,
+          bora721.target,
+          tokenIdsByUser[i],
+          0,
+          users[i]
+        );
+        tbaAccountsByUser.push(tbasOfUser as string[]);
+        tbaContractsByUser.push(tbaContracts);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      let tbaAccounts: string[] = ([] as string[]).concat(...tbaAccountsByUser);
+
+      mlog.before(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance :",
+        await Util.totalBalanceERC1155(bora1155, tbaAccounts)
+      );
+
+      // Step 3: 100 users call execute() to mint token ERC1155 with amount is 1
+      mlog.log(
+        `[${numberOfUser} User]`,
+        `call execute() to mint token ERC1155 with amount is 1`
+      );
+      for (let i = 0; i < tbaAccountsByUser.length; i++) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
+          data = iface1155.encodeFunctionData("tbaMint", [
+            tbaAccountsByUser[i][j],
+            1,
+            "0x",
+          ]);
+          await tbaContractsByUser[i][j]
+            .connect(users[i])
+            .execute(bora1155.target, 0, data, 0);
+        }
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+
+      // Step 4: Verify token ERC1155 balance of all TBA accounts of each token id is 1
+      for (let i = 0; i < tbaAccounts.length; ++i) {
+        const balance = await bora1155.tokensOf(tbaAccounts[i]);
+        expect(balance[1]).to.be.deep.equal([1, 1, 1, 1, 1]);
+      }
+
+      mlog.after(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance :",
+        await Util.totalBalanceERC1155(bora1155, tbaAccounts)
+      );
+    }
+
+    it("Should be successful when 100 users mint at the same time", async function () {
+      await mint(this.mlog, 100);
+    });
+
+    // Timed out
+    it.skip("Should be successful when 200 users mint at the same time", async function () {
+      await mint(this.mlog, 200);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 1.000 users mint at the same time", async function () {
+      await mint(this.mlog, 1000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 10.000 users mint at the same time", async function () {
+      await mint(this.mlog, 10000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 100.000 users mint at the same time", async function () {
+      await mint(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing - Execute - Safe Transfer ERC1155", async function () {
+    async function transfer(mlog: mlog, numberOfUser: number) {
+      // Step 1: Owner of ERC721 mint ${numberOfUser * 3} tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721] mint",
+        numberOfUser * 3,
+        "tokens for",
+        numberOfUser,
+        "users"
+      );
+      let users = await Util.createMultiUser(numberOfUser);
+      const mintTimes = 1;
+      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+        users,
+        mintTimes,
+        bora721
+      );
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser * 3} TBA accounts
+      mlog.log(
+        `[${numberOfUser} User]`,
+        "users use createAccount() to create",
+        numberOfUser * 3,
+        "TBA accounts"
+      );
+      let tbaAccountsByUser: string[][] = [];
+      let tbasOfUser: string[] = [];
+
+      let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
+      let tbaContracts: BoralabsTBA6551Account[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+          bora6551Account.target,
+          bora6551Registry,
+          bora721.target,
+          tokenIdsByUser[i],
+          0,
+          users[i]
+        );
+        tbaAccountsByUser.push(tbasOfUser as string[]);
+        tbaContractsByUser.push(tbaContracts);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      let tbaAccounts: string[] = ([] as string[]).concat(...tbaAccountsByUser);
+
+      // Step 3: 100 users call execute() to mint token ERC1155 with amount is 1
+      mlog.log(
+        `[${numberOfUser} User]`,
+        `call execute() to mint token ERC1155 with amount is 1`
+      );
+      for (let i = 0; i < tbaAccountsByUser.length; i++) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
+          data = iface1155.encodeFunctionData("tbaMint", [
+            tbaAccountsByUser[i][j],
+            1,
+            "0x",
+          ]);
+          await tbaContractsByUser[i][j]
+            .connect(users[i])
+            .execute(bora1155.target, 0, data, 0);
+        }
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+
+      mlog.before(
+        "[TBAs account] total balance",
+        await Util.totalBalanceERC1155(bora1155, tbaAccounts)
+      );
+
+      mlog.before(
+        "[Owner of ERC1155] balance",
+        await bora1155.tokenCountOf(owner1155)
+      );
+
+      // Step 4: 100 users call execute()  to transfer token ERC1155 to Owner of ERC1155 contract
+      mlog.log(
+        `[${numberOfUser} User]`,
+        `call execute()  to transfer token ERC1155 to Owner of ERC1155 contract`
+      );
+      for (let i = 0; i < tbaAccountsByUser.length; i++) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
+          let tokens = (await bora1155.tokensOf(tbaAccountsByUser[i][j]))[0];
+          for (let k = 0; k < tokens.length; k++) {
+            data = iface1155.encodeFunctionData("safeTransferFrom", [
+              tbaAccountsByUser[i][j],
+              owner1155.address,
+              tokens[k],
+              1,
+              "0x",
+            ]);
+            await tbaContractsByUser[i][j]
+              .connect(users[i])
+              .execute(bora1155.target, 0, data, 0);
+          }
+        }
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+
+      // Step 5: Verify token ERC1155 balance of all TBA accounts is 0
+      for (let i = 0; i < tbaAccounts.length; ++i) {
+        const balance = await bora1155.tokensOf(tbaAccounts[i]);
+        expect(balance[1]).to.be.deep.equal([]);
+      }
+
+      // Step 6: Verify token balance each token id of Owner of ERC1155 contract is 1
+      const owner1155TokensArr = await bora1155.tokensOf(owner1155);
+      const owner1155Tokens = owner1155TokensArr[0];
+      for (let i = 0; i < owner1155Tokens.length; ++i) {
+        expect(
+          await bora1155.balanceOf(owner1155, owner1155Tokens[i])
+        ).to.be.equal(1);
+      }
+
+      mlog.after(
+        "[TBAs account] total balance",
+        await Util.totalBalanceERC1155(bora1155, tbaAccounts)
+      );
+
+      mlog.after(
+        "[Owner of ERC1155] balance",
+        await bora1155.tokenCountOf(owner1155)
+      );
+    }
+
+    it("Should be successful when 100 users transfer at the same time", async function () {
+      await transfer(this.mlog, 100);
+    });
+
+    // Timed out
+    it.skip("Should be successful when 200 users transfer at the same time", async function () {
+      await transfer(this.mlog, 200);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 1.000 users transfer at the same time", async function () {
+      await transfer(this.mlog, 1000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 10.000 users transfer at the same time", async function () {
+      await transfer(this.mlog, 10000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 100.000 users transfer at the same time", async function () {
+      await transfer(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing- Execute - TransferCoin", async function () {
+    async function transferCoin(mlog: mlog, numberOfUser: number) {
+      mlog.before(
+        "[User 2]",
+        "coin balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+
+      // Step 1: Owner of ERC721 mint ${numberOfUser} *3 tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721]",
+        ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
+      );
+      const mintTimes = 1;
+      const users = await Util.createMultiUser(numberOfUser);
+      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+        users,
+        mintTimes,
+        bora721
+      );
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser} * 3 TBA accounts
+      let tbaAccountsByUser: string[][] = [];
+      let tbasOfUser: string[] = [];
+
+      let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
+      let tbaContracts: BoralabsTBA6551Account[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+          bora6551Account.target,
+          bora6551Registry,
+          bora721.target,
+          tokenIdsByUser[i],
+          0,
+          users[i]
+        );
+        tbaAccountsByUser.push(tbasOfUser as string[]);
+        tbaContractsByUser.push(tbaContracts);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      let tbaAccounts: string[] = ([] as string[]).concat(...tbaAccountsByUser);
+      const totalCoin = async () => {
+        let balance = 0;
+        for (let i = 0; i < tbaAccounts.length; i++) {
+          balance += Number(await ethers.provider.getBalance(tbaAccounts[i]));
+        }
+        return balance;
+      };
+
+      // Step 3: User 1 transfers 1.000 wei to each TBA
+      const transferAmount = 1000;
+      mlog.log("[User 1]", "transfers 1.000 wei to each TBA");
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        await User1.sendTransaction({
+          to: tbaAccounts[i],
+          value: transferAmount,
+        });
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+      mlog.before(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await totalCoin()
+      );
+
+      // Step 4: ${numberOfUser} users call transferCoin() with an amount is 1000  to transfer coin to User 2
+      mlog.log(
+        `[${numberOfUser} users]`,
+        "users call transferCoin() with an amount is 1000  to transfer coin to User 2"
+      );
+      const user2CoinBalanceBefore = await ethers.provider.getBalance(
+        User2.address
+      );
+      for (let i = 0; i < tbaAccountsByUser.length; i++) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
+          await tbaContractsByUser[i][j]
+            .connect(users[i])
+            .transferCoin(User2.address, transferAmount);
+        }
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+
+      // Step 5: Verify coin balance of each TBA is 0.
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        expect(await ethers.provider.getBalance(tbaAccounts[i])).to.be.equal(0);
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+
+      // Step 6: Verify User 2 balance is increased ${numberOfUser} * 1.000
+      expect(await ethers.provider.getBalance(User2.address)).to.be.equal(
+        user2CoinBalanceBefore + BigInt(numberOfUser * transferAmount * 3)
+      );
+
+      mlog.after(
+        "[User 2]",
+        "coin balance:",
+        await ethers.provider.getBalance(User2.address)
+      );
+      mlog.after(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await totalCoin()
+      );
+    }
+
+    it("Should be successful when 100 users transfer at the same time.", async function () {
+      await transferCoin(this.mlog, 100);
+    });
+
+    it("Should be successful when 1.000 users transfer at the same time.", async function () {
+      await transferCoin(this.mlog, 1000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 10.000 users transfer at the same time.", async function () {
+      await transferCoin(this.mlog, 10000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 100.000 users transfer at the same time.", async function () {
+      await transferCoin(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing- Execute - Burn ERC1155", async function () {
+    async function burnERC1155(mlog: mlog, numberOfUser: number) {
+      // Step 1: Owner of ERC721 mint ${numberOfUser} *3 tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721]",
+        ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
+      );
+      const mintTimes = 1;
+      const users = await Util.createMultiUser(numberOfUser);
+      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+        users,
+        mintTimes,
+        bora721
+      );
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser} * 3 TBA accounts
+      let tbaAccountsByUser: string[][] = [];
+      let tbasOfUser: string[] = [];
+
+      let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
+      let tbaContracts: BoralabsTBA6551Account[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+          bora6551Account.target,
+          bora6551Registry,
+          bora721.target,
+          tokenIdsByUser[i],
+          0,
+          users[i]
+        );
+        tbaAccountsByUser.push(tbasOfUser as string[]);
+        tbaContractsByUser.push(tbaContracts);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      let tbaAccounts: string[] = ([] as string[]).concat(...tbaAccountsByUser);
+
+      // Step 3: ${numberOfUser} users call execute() to mint token ERC1155 with amount is 1
+      mlog.log(
+        `[${numberOfUser} users]`,
+        `call execute() to mint token ERC1155 with amount is 1`
+      );
+      const mintAmount = 1;
+      for (let i = 0; i < tbaAccountsByUser.length; ++i) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; ++j) {
+          data = iface1155.encodeFunctionData("tbaMint", [
+            tbaAccountsByUser[i][j],
+            mintAmount,
+            emptyData,
+          ]);
+          await tbaContractsByUser[i][j]
+            .connect(users[i])
+            .execute(await bora1155.getAddress(), 0, data, 0);
+        }
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      mlog.before(
+        "[TBAs account] balance",
+        await Util.totalBalanceERC1155(bora1155, tbaAccounts)
+      );
+
+      // Step 4: 100 users call execute()  to burn token ERC1155 with amount is 1
+      mlog.log(
+        `[${numberOfUser} users]`,
+        `call execute() to burn token ERC1155 with amount is 1`
+      );
+      for (let i = 0; i < tbaAccountsByUser.length; ++i) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; ++j) {
+          const tokenIds = (
+            await bora1155.tokensOf(tbaAccountsByUser[i][j])
+          )[0];
+          for (let k = 0; k < tokenIds.length; k++) {
+            data = iface1155.encodeFunctionData("burn", [
+              tokenIds[k],
+              mintAmount,
+            ]);
+            await tbaContractsByUser[i][j]
+              .connect(users[i])
+              .execute(bora1155.target, 0, data, 0);
+          }
+        }
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      // Step 5: Verify token ERC1155 balance of all TBA accounts of each token id is 0
+      for (let i = 0; i < tbaAccounts.length; ++i) {
+        const balance = await bora1155.tokensOf(tbaAccounts[i]);
+        expect(balance[0]).to.be.deep.equal([]);
+        expect(balance[1]).to.be.deep.equal([]);
+      }
+
+      mlog.after(
+        "[TBA account] balance",
+        await Util.totalBalanceERC1155(bora1155, tbaAccounts)
+      );
+    }
+
+    it("Should be successful when 50 users burn at the same time.", async function () {
+      await burnERC1155(this.mlog, 50);
+    });
+
+    // Timed out
+    it("Should be successful when 100 users burn at the same time.", async function () {
+      await burnERC1155(this.mlog, 100);
+    });
+
+    // Timed out
+    it.skip("Should be successful when 1.000 users burn at the same time.", async function () {
+      await burnERC1155(this.mlog, 1000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 10.000 users burn at the same time.", async function () {
+      await burnERC1155(this.mlog, 10000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 100.000 users burn at the same time.", async function () {
+      await burnERC1155(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing - Transfer 20", async function () {
+    async function transfer20(mlog: mlog, numberOfUser: number) {
+      mlog.before(
+        "[Owner of ERC20]",
+        "token erc20 balance:",
+        await bora20.balanceOf(owner20.address)
+      );
+
+      // Step 1: Owner of ERC721 mint ${numberOfUser} * 3 tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721]",
+        `mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
+      );
+      const mintTimes = 1;
+      const users = await Util.createMultiUser(numberOfUser);
+      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+        users,
+        mintTimes,
+        bora721
+      );
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser} * 3 TBA accounts
+      let tbaAccountsByUser: string[][] = [];
+      let tbasOfUser: string[] = [];
+
+      let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
+      let tbaContracts: BoralabsTBA6551Account[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+          bora6551Account.target,
+          bora6551Registry,
+          bora721.target,
+          tokenIdsByUser[i],
+          0,
+          users[i]
+        );
+        tbaAccountsByUser.push(tbasOfUser as string[]);
+        tbaContractsByUser.push(tbaContracts);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      let tbaAccounts: string[] = ([] as string[]).concat(...tbaAccountsByUser);
+      mlog.before(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await Util.totalBalanceERC20(bora20, tbaAccounts)
+      );
+
+      // Step 3: Owner of ERC20 mint 1 token to each TBA
+      mlog.log(
+        "[Owner of ERC20]",
+        "mint token ERC20 with amount is 1 to each TBA"
+      );
+      const mintAmount = 1;
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        await bora20.mint(tbaAccounts[i], mintAmount);
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+      mlog.log(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await Util.totalBalanceERC20(bora20, tbaAccounts)
+      );
+
+      // Step 4: ${numberOfUser} users call transfer20() with amount is 1 to transfer token to Owner of ERC20
+      mlog.log(
+        `[${numberOfUser} users]`,
+        "call transfer20() with amount is 1  to transfer token to Owner of ERC20"
+      );
+
+      for (let i = 0; i < tbaAccountsByUser.length; i++) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
+          await tbaContractsByUser[i][j]
+            .connect(users[i])
+            .transfer20(bora20.target, owner20.address, 1);
+        }
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+
+      // Step 5: Verify token ERC20 balance of each TBA is 0
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        expect(await bora20.balanceOf(tbaAccounts[i])).to.be.equal(0);
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+
+      // Step 6: Verify Owner of ERC20 token ERC20 balance is ${numberOfUser * 3}
+      expect(await bora20.balanceOf(owner20.address)).to.be.equal(
+        numberOfUser * mintAmount * 3
+      );
+
+      mlog.after(
+        "[Owner of ERC20]",
+        "token erc20 balance:",
+        await bora20.balanceOf(owner20.address)
+      );
+      mlog.after(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await Util.totalBalanceERC20(bora20, tbaAccounts)
+      );
+    }
+
+    it("Should be successful when 100 users transfer20() at the same time", async function () {
+      await transfer20(this.mlog, 100);
+    });
+
+    // Timed out
+    it("Should be successful when 200 users transfer20() at the same time", async function () {
+      await transfer20(this.mlog, 200);
+    });
+
+    // Timed out and out of memory
+    it.skip("Should be successful when 1.000 users transfer20() at the same time", async function () {
+      await transfer20(this.mlog, 1000);
+    });
+
+    // Timed out and out of memory
+    it.skip("Should be successful when 10.000 users transfer20() at the same time", async function () {
+      await transfer20(this.mlog, 10000);
+    });
+
+    // Timed out and out of memory
+    it.skip("Should be successful when 100.000 users transfer20() at the same time", async function () {
+      await transfer20(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing - Transfer 721", async function () {
+    async function transfer721(mlog: mlog, numberOfUser: number) {
+      mlog.before(
+        "[Owner of ERC721]",
+        "balance:",
+        await bora721.balanceOf(owner721.address)
+      );
+
+      // Step 1: Owner of ERC721 mint ${numberOfUser} * 3 tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721] mint",
+        numberOfUser * 3,
+        "tokens for",
+        numberOfUser,
+        "users"
+      );
+      let users = await Util.createMultiUser(numberOfUser);
+      const mintTimes = 1;
+      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+        users,
+        mintTimes,
+        bora721
+      );
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser} * 3 TBA accounts
+      mlog.log(
+        numberOfUser,
+        "users use createAccount() to create",
+        numberOfUser * 3,
+        "TBA accounts"
+      );
+      let tbaAccountsByUser: string[][] = [];
+      let tbasOfUser: string[] = [];
+
+      let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
+      let tbaContracts: BoralabsTBA6551Account[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+          bora6551Account.target,
+          bora6551Registry,
+          bora721.target,
+          tokenIdsByUser[i],
+          0,
+          users[i]
+        );
+        tbaAccountsByUser.push(tbasOfUser as string[]);
+        tbaContractsByUser.push(tbaContracts);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      let tbaAccounts: string[] = ([] as string[]).concat(...tbaAccountsByUser);
+      mlog.before(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await Util.totalBalanceERC721(bora721, tbaAccounts)
+      );
+
+      // Step 3: Owner of ERC721 mint 3 tokens to each TBA
+      mlog.log("[Owner of ERC721]", "mint 3 tokens to each TBA");
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        await bora721.tbaMint(tbaAccounts[i]);
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+      mlog.log(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await Util.totalBalanceERC721(bora721, tbaAccounts)
+      );
+
+      // Step 4: ${numberOfUser} users call transfer721() to transfer 1 token to Owner of ERC721
+      mlog.log(
+        `[${numberOfUser} users]`,
+        "call transfer721() to transfer 1 token to Owner of ERC721"
+      );
+
+      for (let i = 0; i < tbaAccountsByUser.length; i++) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
+          const tokenIds = await bora721.tokensOf(tbaAccountsByUser[i][j]);
+          await tbaContractsByUser[i][j]
+            .connect(users[i])
+            .transfer721(bora721.target, owner721.address, tokenIds[0]);
+        }
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+
+      // Step 5: Verify token ERC721 balance of each TBA is 2
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        expect(await bora721.balanceOf(tbaAccounts[i])).to.be.equal(2);
+      }
+
+      // Step 6: Verify Owner of ERC721 token ERC721 balance increases {numberOfUser * 3}
+      expect(await bora721.balanceOf(owner721.address)).to.be.equals(
+        numberOfUser * 3 + 3
+      );
+
+      mlog.after(
+        "[Owner of ERC721]",
+        "balance:",
+        await bora721.balanceOf(owner721.address)
+      );
+      mlog.after(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await Util.totalBalanceERC721(bora721, tbaAccounts)
+      );
+    }
+
+    it("Should be successful when 100 users transfer721() at the same time", async function () {
+      await transfer721(this.mlog, 100);
+    });
+
+    // Timed out
+    it.skip("Should be successful when 200 users transfer721() at the same time", async function () {
+      await transfer721(this.mlog, 200);
+    });
+
+    // Timed out and out of memory
+    it.skip("Should be successful when 1.000 users transfer721() at the same time", async function () {
+      await transfer721(this.mlog, 1000);
+    });
+
+    // Timed out and out of memory
+    it.skip("Should be successful when 10.000 users transfer721() at the same time", async function () {
+      await transfer721(this.mlog, 10000);
+    });
+
+    // Timed out and out of memory
+    it.skip("Should be successful when 100.000 users transfer721() at the same time", async function () {
+      await transfer721(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing - Transfer 1155", async function () {
+    async function transfer(mlog: mlog, numberOfUser: number) {
+      mlog.before(
+        "[Owner of ERC1155]",
+        "balance:",
+        await bora1155.tokenCountOf(owner1155.address)
+      );
+
+      // Step 1: Owner of ERC721 mint ${numberOfUser * 3} tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721] mint",
+        numberOfUser * 3,
+        "tokens for",
+        numberOfUser,
+        "users"
+      );
+      let users = await Util.createMultiUser(numberOfUser);
+      const mintTimes = 1;
+      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+        users,
+        mintTimes,
+        bora721
+      );
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser * 3} TBA accounts
+      mlog.log(
+        numberOfUser,
+        "users use createAccount() to create",
+        numberOfUser * 3,
+        "TBA accounts"
+      );
+      let tbaAccountsByUser: string[][] = [];
+      let tbasOfUser: string[] = [];
+
+      let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
+      let tbaContracts: BoralabsTBA6551Account[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+          bora6551Account.target,
+          bora6551Registry,
+          bora721.target,
+          tokenIdsByUser[i],
+          0,
+          users[i]
+        );
+        tbaAccountsByUser.push(tbasOfUser as string[]);
+        tbaContractsByUser.push(tbaContracts);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      let tbaAccounts: string[] = ([] as string[]).concat(...tbaAccountsByUser);
+
+      // Step 3: Owner of ERC1155 mint 5 tokens with an amount is 1000 to each TBA.
+      mlog.log(
+        "[Owner of ERC1155]",
+        "mint 5 tokens with an amount is 1000 to each TBA"
+      );
+      const amount = 1000;
+      for (let i = 0; i < tbaAccountsByUser.length; i++) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
+          await Util.mintMulti1155(
+            tbaAccountsByUser[i][j],
+            amount,
+            emptyData,
+            mintTimes,
+            bora1155
+          );
+        }
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+
+      mlog.before(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await Util.totalBalanceERC1155(bora1155, tbaAccounts)
+      );
+
+      // Step 4: ${numberOfUser} users call transfer1155() to transfer tokens with amount is 1000 to Owner of ERC1155
+      mlog.log(
+        numberOfUser,
+        "users call transfer1155() to transfer tokens with amount is 1000 to Owner of ERC1155"
+      );
+
+      for (let i = 0; i < tbaAccountsByUser.length; i++) {
+        for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
+          let tokens = (await bora1155.tokensOf(tbaAccountsByUser[i][j]))[0];
+          for (let k = 0; k < tokens.length; k++) {
+            await tbaContractsByUser[i][j]
+              .connect(users[i])
+              .transfer1155(
+                bora1155.target,
+                owner1155.address,
+                tokens[k],
+                amount,
+                emptyData
+              );
+          }
+        }
+        Util.showProgress(i + 1, tbaAccountsByUser.length);
+      }
+      Util.clearProgress();
+
+      // Step 5: Verify token ERC1155 balance of each TBA of each token ids is 0.
+      for (let i = 0; i < tbaAccounts.length; ++i) {
+        const balance = await bora1155.tokensOf(tbaAccounts[i]);
+        expect(balance[1]).to.be.deep.equal([]);
+      }
+
+      // Step 6: Verify Owner of ERC1155 token ERC1155 balance of each token ids is 1000
+      const owner1155TokensArr = await bora1155.tokensOf(owner1155);
+      const owner1155Tokens = owner1155TokensArr[0];
+      for (let i = 0; i < owner1155Tokens.length; ++i) {
+        expect(
+          await bora1155.balanceOf(owner1155, owner1155Tokens[i])
+        ).to.be.equal(1000);
+      }
+
+      mlog.after(
+        "[Owner of ERC1155]",
+        "balance:",
+        await bora1155.tokenCountOf(owner1155.address)
+      );
+      mlog.after(
+        `[${numberOfUser * 3} TBAs]`,
+        "total balance:",
+        await Util.totalBalanceERC1155(bora1155, tbaAccounts)
+      );
+    }
+
+    it("Should be successful when 50 users transfer1155() at the same time.", async function () {
+      await transfer(this.mlog, 50);
+    });
+
+    // Timed out
+    it.skip("Should be successful when 100 users transfer1155() at the same time.", async function () {
+      await transfer(this.mlog, 100);
+    });
+
+    // Timed out
+    it.skip("Should be successful when 1.000 users transfer1155() at the same time.", async function () {
+      await transfer(this.mlog, 100);
+    });
+
+    // Timed out
+    it.skip("Should be successful when 10.000 users transfer1155() at the same time.", async function () {
+      await transfer(this.mlog, 200);
+    });
+
+    // Timed out
+    it.skip("Should be successful when 100.000 users transfer1155() at the same time.", async function () {
+      await transfer(this.mlog, 1000);
     });
   });
 });

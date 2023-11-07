@@ -205,19 +205,15 @@ class Util {
     return result;
   }
 
-  static async tokensCountOfTBAs(
+  static async totalBalanceERC1155(
     contract1155: BoralabsTBA1155,
-    tbaAccounts: any[]
+    tbaAccounts: string[]
   ) {
-    let accounts: any[] = ([] as any[]).concat(...tbaAccounts);
-    let result = 0;
-    for (let i = 0; i < accounts.length; ++i) {
-      const tokenOfAccount = Number(
-        await contract1155.tokenCountOf(accounts[i])
-      );
-      result += tokenOfAccount;
+    let balance = 0;
+    for (let i = 0; i < tbaAccounts.length; ++i) {
+      balance += Number(await contract1155.tokenCountOf(tbaAccounts[i]));
     }
-    return result;
+    return balance;
   }
 
   static async totalBalanceERC20(
