@@ -118,16 +118,16 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         "[User 2]",
         `uses tbaMint() ${mintTimes} times to mint ${numberOfTransaction} ERC721 tokens`
       );
-      const tokenIds = await Util.mintMulti721(
+      const tokenIds = await Util.multiMint721(
+        bora721,
         User2.address,
-        mintTimes,
-        bora721
+        mintTimes
       );
 
       mlog.before(
         "[TBA accounts]",
         "of User 2:",
-        await Util.getTotalTBA(tokenIds, bora721, bora6551Registry)
+        await Util.countTotalTBA(tokenIds, bora721, bora6551Registry)
       );
 
       // Step 2: User 2 uses createAccount() to create ${numberOfTransaction} from ${numberOfTransaction} tokens above
@@ -135,7 +135,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         "[User 2]",
         `uses createAccount() to create ${numberOfTransaction} TBA accounts from ${numberOfTransaction} tokens above`
       );
-      await Util.createMultiTBA(
+      await Util.createTBAs(
         bora6551Account.target,
         bora6551Registry,
         bora721.target,
@@ -145,7 +145,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       );
 
       // Step 3: Verify the number of TBA accounts is ${numberOfTransaction}
-      const tbaAccounts = await Util.getTotalTBA(
+      const tbaAccounts = await Util.countTotalTBA(
         tokenIds,
         bora721,
         bora6551Registry
@@ -506,7 +506,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         numberOfTransaction,
         "ERC721 tokens"
       );
-      let tokenIds = await Util.executeMintMulti721(
+      let tokenIds = await Util.multiExecuteMint721(
         tba,
         tbaAddress,
         numberOfTransaction / 3,
@@ -593,7 +593,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         numberOfTransaction,
         "ERC721 tokens"
       );
-      let tokenIds = await Util.executeMintMulti721(
+      let tokenIds = await Util.multiExecuteMint721(
         tba,
         tbaAddress,
         numberOfTransaction / 3,
@@ -665,7 +665,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         "[TBA Account]",
         `calls execute() ${numberOfTransaction} times to mint erc1155 token with amount is 1`
       );
-      await Util.executeMintMulti1155(
+      await Util.multiExecuteMint1155(
         tba,
         tbaAddress,
         1,
@@ -713,7 +713,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       const mintTimes = numberOfTransaction / 5;
 
       // Step 1: TBA calls execute() ${mintTimes} times to mint erc1155 token
-      const tokenIds = await Util.executeMintMulti1155(
+      const tokenIds = await Util.multiExecuteMint1155(
         tba,
         tbaAddress,
         1,
@@ -802,7 +802,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         `calls execute() to mint ${numberOfTransaction} token to TBA`
       );
       const mintAmount = 1;
-      const tokenIds = await Util.executeMintMulti1155(
+      const tokenIds = await Util.multiExecuteMint1155(
         tba,
         tbaAddress,
         mintAmount,
@@ -958,10 +958,10 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         "[Owner of ERC721]",
         `mint ${numberOfTransaction * 3} tokens to TBA`
       );
-      let tokenIds = await Util.mintMulti721(
+      let tokenIds = await Util.multiMint721(
+        bora721,
         tbaAddress,
-        numberOfTransaction,
-        bora721
+        numberOfTransaction
       );
       mlog.log(
         "[TBA Account]",
@@ -1118,12 +1118,12 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       );
       const amount = 1000;
       const emptyData = "0x";
-      let tokenIds = await Util.mintMulti1155(
+      let tokenIds = await Util.multiMint1155(
+        bora1155,
         tbaAddress,
         amount,
         emptyData,
-        numberOfTransaction / 5,
-        bora1155
+        numberOfTransaction / 5
       );
 
       // Step 2: TBA calls transfer1155() ${numberOfTransaction} times with an amount of 1.000 to transfer tokens to User 2.
@@ -1524,14 +1524,14 @@ describe("BoralabsTBA6551: Non-functional test", function () {
   describe("Load Testing - Create Account", async function () {
     async function createAccountForMultiUser(mlog: mlog, numberOfUser: number) {
       // Create ${numberOfUser} users
-      const users = await Util.createMultiUser(numberOfUser);
+      const users = await Util.createUsers(numberOfUser);
 
       // Step 1: Owner of ERC721 mint ${numberOfUser * 3} tokens for ${numberOfUser} users
       mlog.log(
         "[Owner of ERC721]",
         `mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
       );
-      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      const tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         1,
         bora721
@@ -1540,7 +1540,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
 
       mlog.before(
         "Numbers [TBA accounts] :",
-        await Util.getTotalTBA(tokenIds, bora721, bora6551Registry)
+        await Util.countTotalTBA(tokenIds, bora721, bora6551Registry)
       );
 
       // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser * 3} TBA accounts
@@ -1550,7 +1550,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       );
 
       for (let i = 0; i < users.length; ++i) {
-        await Util.createMultiTBA(
+        await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -1564,7 +1564,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
 
       const numberOfTBA = numberOfUser * Number(await bora721.oneTimeMintNum());
       // Step 3: Verify ${numOfAccounts} TBA accounts have created
-      const totalTBA = await Util.getTotalTBA(
+      const totalTBA = await Util.countTotalTBA(
         tokenIds,
         bora721,
         bora6551Registry
@@ -1605,8 +1605,8 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
       );
       const mintTimes = 1;
-      const users = await Util.createMultiUser(numberOfUser);
-      await Util.mintMulti721ForMultiUser(users, mintTimes, bora721);
+      const users = await Util.createUsers(numberOfUser);
+      await Util.multiMint721ForMultiUser(users, mintTimes, bora721);
 
       // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser} * 3 TBA accounts
       mlog.log(
@@ -1617,7 +1617,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaAccounts: string[] = [];
       for (let i = 0; i < users.length; ++i) {
         const tokenIds = await bora721.tokensOf(users[i]);
-        const [tbasOfUser] = await Util.createMultiTBA(
+        const [tbasOfUser] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -1704,8 +1704,8 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
       );
       const mintTimes = 1;
-      const users = await Util.createMultiUser(numberOfUser);
-      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      const users = await Util.createUsers(numberOfUser);
+      const tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -1718,7 +1718,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -1837,8 +1837,8 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
       );
       const mintTimes = 1;
-      const users = await Util.createMultiUser(numberOfUser);
-      const tokenIds = await Util.mintMulti721ForMultiUser(
+      const users = await Util.createUsers(numberOfUser);
+      const tokenIds = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -1855,7 +1855,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -1947,8 +1947,8 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
       );
       const mintTimes = 1;
-      const users = await Util.createMultiUser(numberOfUser);
-      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      const users = await Util.createUsers(numberOfUser);
+      const tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -1965,7 +1965,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -2054,9 +2054,9 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         numberOfUser,
         "users"
       );
-      let users = await Util.createMultiUser(numberOfUser);
+      let users = await Util.createUsers(numberOfUser);
       const mintTimes = 1;
-      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      let tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -2075,7 +2075,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -2197,9 +2197,9 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         numberOfUser,
         "users"
       );
-      let users = await Util.createMultiUser(numberOfUser);
+      let users = await Util.createUsers(numberOfUser);
       const mintTimes = 1;
-      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      let tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -2218,7 +2218,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -2326,9 +2326,9 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         numberOfUser,
         "users"
       );
-      let users = await Util.createMultiUser(numberOfUser);
+      let users = await Util.createUsers(numberOfUser);
       const mintTimes = 1;
-      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      let tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -2347,7 +2347,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -2437,9 +2437,9 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         numberOfUser,
         "users"
       );
-      let users = await Util.createMultiUser(numberOfUser);
+      let users = await Util.createUsers(numberOfUser);
       const mintTimes = 1;
-      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      let tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -2458,7 +2458,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -2594,8 +2594,8 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
       );
       const mintTimes = 1;
-      const users = await Util.createMultiUser(numberOfUser);
-      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      const users = await Util.createUsers(numberOfUser);
+      const tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -2608,7 +2608,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -2717,8 +2717,8 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
       );
       const mintTimes = 1;
-      const users = await Util.createMultiUser(numberOfUser);
-      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      const users = await Util.createUsers(numberOfUser);
+      const tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -2731,7 +2731,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -2849,8 +2849,8 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         `mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
       );
       const mintTimes = 1;
-      const users = await Util.createMultiUser(numberOfUser);
-      const tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      const users = await Util.createUsers(numberOfUser);
+      const tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -2863,7 +2863,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -2982,9 +2982,9 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         numberOfUser,
         "users"
       );
-      let users = await Util.createMultiUser(numberOfUser);
+      let users = await Util.createUsers(numberOfUser);
       const mintTimes = 1;
-      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      let tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -3003,7 +3003,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -3117,9 +3117,9 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         numberOfUser,
         "users"
       );
-      let users = await Util.createMultiUser(numberOfUser);
+      let users = await Util.createUsers(numberOfUser);
       const mintTimes = 1;
-      let tokenIdsByUser = await Util.mintMulti721ForMultiUser(
+      let tokenIdsByUser = await Util.multiMint721ForMultiUser(
         users,
         mintTimes,
         bora721
@@ -3138,7 +3138,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       let tbaContractsByUser: BoralabsTBA6551Account[][] = [];
       let tbaContracts: BoralabsTBA6551Account[] = [];
       for (let i = 0; i < users.length; ++i) {
-        [tbasOfUser, tbaContracts] = await Util.createMultiTBA(
+        [tbasOfUser, tbaContracts] = await Util.createTBAs(
           bora6551Account.target,
           bora6551Registry,
           bora721.target,
@@ -3162,12 +3162,12 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       const amount = 1000;
       for (let i = 0; i < tbaAccountsByUser.length; i++) {
         for (let j = 0; j < tbaAccountsByUser[i].length; j++) {
-          await Util.mintMulti1155(
+          await Util.multiMint1155(
+            bora1155,
             tbaAccountsByUser[i][j],
             amount,
             emptyData,
-            mintTimes,
-            bora1155
+            mintTimes
           );
         }
         Util.showProgress(i + 1, tbaAccountsByUser.length);

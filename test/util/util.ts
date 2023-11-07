@@ -29,119 +29,128 @@ class Util {
     return number != 0;
   }
 
-  static async mintMulti721(
-    mintTo: string,
-    mintTimes: number,
-    contract: BoralabsTBA721
+  static async multiMint721(
+    erc721Contract: BoralabsTBA721,
+    to: string,
+    times: number
   ) {
-    const availableMintNum = await contract.availableMintNum();
+    const availableMintNum = Number(await erc721Contract.availableMintNum());
+    const mintBand = Number(await erc721Contract.mintBand());
     let tokenIds = [];
-    const mintBand = 10000000;
-    for (let i = 0; i < mintTimes; ++i) {
-      tokenIds.push(mintBand + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 2 + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 3 + Number(availableMintNum) + i);
-      await contract.tbaMint(mintTo);
-      Util.showProgress(i + 1, mintTimes);
+    for (let i = 0; i < times; ++i) {
+      tokenIds.push(mintBand + availableMintNum + i);
+      tokenIds.push(mintBand * 2 + availableMintNum + i);
+      tokenIds.push(mintBand * 3 + availableMintNum + i);
+      await erc721Contract.tbaMint(to);
+      Util.showProgress(i + 1, times);
     }
     Util.clearProgress();
     return tokenIds;
   }
 
-  static async executeMintMulti721(
-    tba: BoralabsTBA6551Account,
-    mintTo: string,
-    mintTimes: number,
-    contract: BoralabsTBA721
+  static async multiMint1155(
+    erc1155Contract: BoralabsTBA1155,
+    to: string,
+    amount: number,
+    data: any,
+    times: number
   ) {
-    const availableMintNum = await contract.availableMintNum();
+    const availableMintNum = Number(await erc1155Contract.availableMintNum());
+    const mintBand = Number(await erc1155Contract.mintBand());
     let tokenIds = [];
-    const mintBand = 10000000;
+
+    for (let i = 0; i < times; ++i) {
+      tokenIds.push(mintBand + availableMintNum + i);
+      tokenIds.push(mintBand * 2 + availableMintNum + i);
+      tokenIds.push(mintBand * 3 + availableMintNum + i);
+      tokenIds.push(mintBand * 4 + availableMintNum + i);
+      tokenIds.push(mintBand * 5 + availableMintNum + i);
+      await erc1155Contract.tbaMint(to, amount, data);
+      Util.showProgress(i + 1, times);
+    }
+    Util.clearProgress();
+    return tokenIds;
+  }
+
+  static async multiExecuteMint721(
+    accountContract: BoralabsTBA6551Account,
+    to: string,
+    times: number,
+    erc721Contract: BoralabsTBA721
+  ) {
+    const availableMintNum = Number(await erc721Contract.availableMintNum());
+    const mintBand = Number(await erc721Contract.mintBand());
+    let tokenIds = [];
+
     const iface721 = new Interface(["function tbaMint( address to )"]);
-    let data = iface721.encodeFunctionData("tbaMint", [mintTo]);
+    let data = iface721.encodeFunctionData("tbaMint", [to]);
 
-    for (let i = 0; i < mintTimes; ++i) {
-      tokenIds.push(mintBand + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 2 + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 3 + Number(availableMintNum) + i);
-      await tba.execute(await contract.getAddress(), 0, data, 0);
-      Util.showProgress(i + 1, mintTimes);
+    for (let i = 0; i < times; ++i) {
+      tokenIds.push(mintBand + availableMintNum + i);
+      tokenIds.push(mintBand * 2 + availableMintNum + i);
+      tokenIds.push(mintBand * 3 + availableMintNum + i);
+      await accountContract.execute(
+        await erc721Contract.getAddress(),
+        0,
+        data,
+        0
+      );
+      Util.showProgress(i + 1, times);
     }
     Util.clearProgress();
+
     return tokenIds;
   }
 
-  static async mintMulti1155(
-    mintTo: string,
+  static async multiExecuteMint1155(
+    accountContract: BoralabsTBA6551Account,
+    to: string,
     amount: number,
-    mintData: any,
-    mintTimes: number,
-    contract: BoralabsTBA1155
+    data: any,
+    times: number,
+    erc1155Contract: BoralabsTBA1155
   ) {
-    const availableMintNum = await contract.availableMintNum();
+    const availableMintNum = Number(await erc1155Contract.availableMintNum());
+    const mintBand = Number(await erc1155Contract.mintBand());
     let tokenIds = [];
-    const mintBand = 10000000;
 
-    for (let i = 0; i < mintTimes; ++i) {
-      tokenIds.push(mintBand + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 2 + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 3 + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 4 + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 5 + Number(availableMintNum) + i);
-      await contract.tbaMint(mintTo, amount, mintData);
-      Util.showProgress(i + 1, mintTimes);
-    }
-    Util.clearProgress();
-    return tokenIds;
-  }
-
-  static async executeMintMulti1155(
-    tba: BoralabsTBA6551Account,
-    mintTo: string,
-    amount: number,
-    mintData: any,
-    mintTimes: number,
-    contract: BoralabsTBA1155
-  ) {
-    const availableMintNum = await contract.availableMintNum();
-    let tokenIds = [];
-    const mintBand = 10000000;
     const iface1155 = new Interface([
       "function tbaMint(address to, uint256 amount, bytes memory data)",
     ]);
-    let data = iface1155.encodeFunctionData("tbaMint", [
-      mintTo,
-      amount,
-      mintData,
-    ]);
+    data = iface1155.encodeFunctionData("tbaMint", [to, amount, data]);
 
-    for (let i = 0; i < mintTimes; ++i) {
-      tokenIds.push(mintBand + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 2 + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 3 + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 4 + Number(availableMintNum) + i);
-      tokenIds.push(mintBand * 5 + Number(availableMintNum) + i);
-      await tba.execute(await contract.getAddress(), 0, data, 0);
-      Util.showProgress(i + 1, mintTimes);
+    for (let i = 0; i < times; ++i) {
+      tokenIds.push(mintBand + availableMintNum + i);
+      tokenIds.push(mintBand * 2 + availableMintNum + i);
+      tokenIds.push(mintBand * 3 + availableMintNum + i);
+      tokenIds.push(mintBand * 4 + availableMintNum + i);
+      tokenIds.push(mintBand * 5 + availableMintNum + i);
+      await accountContract.execute(
+        await erc1155Contract.getAddress(),
+        0,
+        data,
+        0
+      );
+      Util.showProgress(i + 1, times);
     }
     Util.clearProgress();
     return tokenIds;
   }
 
-  static async mintMulti721ForMultiUser(
+  static async multiMint721ForMultiUser(
     mintTo: any[],
     mintTimes: number,
     contract: BoralabsTBA721
   ) {
     let tokenIds: number[][] = [];
     for (let i = 0; i < mintTo.length; ++i) {
-      const tokenId = await this.mintMulti721(mintTo[i], mintTimes, contract);
+      const tokenId = await this.multiMint721(contract, mintTo[i], mintTimes);
       tokenIds.push(tokenId);
     }
     return tokenIds;
   }
 
-  static async createMultiUser(numOfUsers: number) {
+  static async createUsers(numOfUsers: number) {
     const signers = [];
     const users = await ethers.getSigners();
     for (let i = 0; i < numOfUsers; i++) {
@@ -156,20 +165,20 @@ class Util {
     return signers;
   }
 
-  static async createMultiTBA(
+  static async createTBAs(
     implementAddress: string,
     registry: BoralabsTBA6551Registry,
     tokenAddress: string,
     tokenIds: any[],
     salt: number,
-    connectUser: any
+    tbaOwner: any
   ) {
     let tbaAddresses: string[] = [];
     let tbaContracts: BoralabsTBA6551Account[] = [];
     const chainId = network.config.chainId as BigNumberish;
     for (let i = 0; i < tokenIds.length; ++i) {
       await registry
-        .connect(connectUser)
+        .connect(tbaOwner)
         .createAccount(
           implementAddress,
           chainId,
@@ -190,50 +199,50 @@ class Util {
     return [tbaAddresses, tbaContracts];
   }
 
-  static async getTotalTBA(
+  static async countTotalTBA(
     tokenIds: number[],
-    contract721: BoralabsTBA721,
-    contractRegistry: BoralabsTBA6551Registry
+    erc721Contract: BoralabsTBA721,
+    registryContract: BoralabsTBA6551Registry
   ) {
-    let result = 0;
+    let count = 0;
     for (let i = 0; i < tokenIds.length; ++i) {
       const accountsOfToken = (
-        await contractRegistry.accountsOf(contract721, tokenIds[i])
+        await registryContract.accountsOf(erc721Contract, tokenIds[i])
       ).length;
-      result += accountsOfToken;
+      count += accountsOfToken;
     }
-    return result;
-  }
-
-  static async totalBalanceERC1155(
-    contract1155: BoralabsTBA1155,
-    tbaAccounts: string[]
-  ) {
-    let balance = 0;
-    for (let i = 0; i < tbaAccounts.length; ++i) {
-      balance += Number(await contract1155.tokenCountOf(tbaAccounts[i]));
-    }
-    return balance;
+    return count;
   }
 
   static async totalBalanceERC20(
-    contract20: BoralabsTBA20,
+    erc20Contract: BoralabsTBA20,
     tbaAccounts: string[]
   ) {
     let balance = 0;
     for (let i = 0; i < tbaAccounts.length; ++i) {
-      balance += Number(await contract20.balanceOf(tbaAccounts[i]));
+      balance += Number(await erc20Contract.balanceOf(tbaAccounts[i]));
     }
     return balance;
   }
 
   static async totalBalanceERC721(
-    contract721: BoralabsTBA721,
+    erc721Contract: BoralabsTBA721,
     tbaAccounts: string[]
   ) {
     let balance = 0;
     for (let i = 0; i < tbaAccounts.length; ++i) {
-      balance += Number(await contract721.balanceOf(tbaAccounts[i]));
+      balance += Number(await erc721Contract.balanceOf(tbaAccounts[i]));
+    }
+    return balance;
+  }
+
+  static async totalBalanceERC1155(
+    erc1155Contract: BoralabsTBA1155,
+    tbaAccounts: string[]
+  ) {
+    let balance = 0;
+    for (let i = 0; i < tbaAccounts.length; ++i) {
+      balance += Number(await erc1155Contract.tokenCountOf(tbaAccounts[i]));
     }
     return balance;
   }
