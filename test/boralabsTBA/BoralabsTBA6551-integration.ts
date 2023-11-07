@@ -34,12 +34,13 @@ describe("BoralabsTBA6551: Integration test", function () {
   let tbaAddress2: string;
 
   let owner20: HardhatEthersSigner;
-  let owner1155: HardhatEthersSigner;
 
   let User1: HardhatEthersSigner;
   let User2: HardhatEthersSigner;
 
   let data: string;
+
+  const TRANSACTION_SUCCESS = 1;
 
   const iface20 = new Interface([
     "function transfer(address to, uint256 amount)",
@@ -72,7 +73,7 @@ describe("BoralabsTBA6551: Integration test", function () {
     ({ bora721 } = await loadFixture(deployBora721));
 
     // deploy bora1155
-    ({ bora1155, owner1155 } = await loadFixture(deployBora1155));
+    ({ bora1155 } = await loadFixture(deployBora1155));
 
     // deploy bora 6551 account
     ({ bora6551Account } = await loadFixture(deployBora6551Account));
@@ -2668,7 +2669,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       const tx = await User1.sendTransaction({ to: tbaAddress, value: 1000 });
       const receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       const transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 3: Verify balance of TBA increase 1000 wei
@@ -2714,7 +2715,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       this.mlog.log("[User2]", "sends a transaction with 1000 wei to TBA");
       const tx = await User2.sendTransaction({ to: tbaAddress, value: 1000 });
       const receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       const transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 3: Verify balance of TBA increase 1000 wei
@@ -2763,28 +2764,28 @@ describe("BoralabsTBA6551: Integration test", function () {
         value: 1000,
       });
       let receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       let transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 2: TBA call transferCoin() to transfer 100 wei to TBA’s owner
       this.mlog.log("[TBA Account]", "send 100 wei to TBA’s owner");
       tx = await tba.connect(User1).transferCoin(User1.address, 100);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 3: TBA call transferCoin() to transfer 200 wei to TBA’s owner
       this.mlog.log("[TBA Account]", "send 200 wei to TBA’s owner");
       tx = await tba.connect(User1).transferCoin(User1.address, 200);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 4: TBA call transferCoin() to transfer 300 wei to TBA’s owner
       this.mlog.log("[TBA Account]", "send 300 wei to TBA’s owner");
       tx = await tba.connect(User1).transferCoin(User1.address, 300);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 5: Verify token balance of TBA account is increase 400 wei
@@ -2842,28 +2843,28 @@ describe("BoralabsTBA6551: Integration test", function () {
         value: 1000,
       });
       let receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       let transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 2: TBA call transferCoin() to transfer 100 wei User2
       this.mlog.log("[TBA Account]", "send 100 wei to User2");
       tx = await tba.connect(User1).transferCoin(User2.address, 100);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 3: TBA call transferCoin() to transfer 200 wei User2
       this.mlog.log("[TBA Account]", "send 200 wei to User2");
       tx = await tba.connect(User1).transferCoin(User2.address, 200);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 4: TBA call transferCoin() to transfer 300 wei User2
       this.mlog.log("[TBA Account]", "send 300 wei to User2");
       tx = await tba.connect(User1).transferCoin(User2.address, 300);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 5: Verify token balance of TBA account is increase 400 wei
@@ -3048,21 +3049,21 @@ describe("BoralabsTBA6551: Integration test", function () {
         value: 1000,
       });
       let receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       let transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 3: Account 1 calls transferCoin() to transfer 100 wei to Account 2
       this.mlog.log("[TBA Account 1]", "send 100 wei to TBA Account 2");
       tx = await tba.connect(User1).transferCoin(tbaAddress2, 100);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 4: Account 1 calls transferCoin() to transfer 200 wei to Account 2
       this.mlog.log("[TBA Account 1]", "send 200 wei to TBA Account 2");
       tx = await tba.connect(User1).transferCoin(tbaAddress2, 200);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 5: Account 1 calls transferCoin() to transfer 300 wei to Account 2
@@ -3070,7 +3071,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       tx = await tba.connect(User1).transferCoin(tbaAddress2, 300);
 
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 6: Verify token balance of TBA account is increase 400 wei
@@ -3129,7 +3130,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         value: 1000,
       });
       let receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       let transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 2: Account 1 calls execute() to transfer 100 wei to User2
@@ -3143,7 +3144,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       tx = await tba.connect(User1).execute(User2.address, 100, data, 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 3: Account 1 calls execute() to transfer 200 wei to User2
@@ -3157,7 +3158,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       tx = await tba.connect(User1).execute(User2.address, 200, data, 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 4: Account 1 calls execute() to transfer 300 wei to User2
@@ -3171,7 +3172,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       tx = await tba.connect(User1).execute(User2.address, 300, data, 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 5: Verify token balance of TBA account is increase 400 wei
@@ -3229,7 +3230,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         value: 1000,
       });
       let receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       let transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 2: TBA call execute() to transfer 100 wei to TBA’s owner
@@ -3243,7 +3244,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       tx = await tba.connect(User1).execute(User1.address, 100, data, 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 3: TBA call execute() to transfer 200 wei to TBA’s owner
@@ -3257,7 +3258,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       tx = await tba.connect(User1).execute(User1.address, 200, data, 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 4: TBA call execute() to transfer 300 wei to TBA’s owner
@@ -3271,7 +3272,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       ]);
       tx = await tba.connect(User1).execute(User1.address, 300, data, 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 5: Verify token balance of TBA account is increase 400 wei
@@ -3344,7 +3345,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         value: 1000,
       });
       let receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       let transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 3: Account 1 calls execute() to transfer 100 wei to Account 2
@@ -3354,7 +3355,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       tx = await tba.connect(User1).execute(tbaAddress2, 100, "0x", 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 4: Account 1 calls execute() to transfer 200 wei to Account 2
@@ -3364,7 +3365,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       tx = await tba.connect(User1).execute(tbaAddress2, 200, "0x", 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 5: Account 1 calls execute() to transfer 300 wei to Account 2
@@ -3374,7 +3375,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       tx = await tba.connect(User1).execute(tbaAddress2, 300, "0x", 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 6: Verify token balance of TBA account is increase 400 wei
@@ -3457,7 +3458,7 @@ describe("BoralabsTBA6551: Integration test", function () {
         value: 1000,
       });
       let receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       let transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 3: Account 1 calls execute() to transfer 100 wei to Account 2
@@ -3467,7 +3468,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       tx = await tba.connect(User1).execute(tbaAddress2, 100, "0x", 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 4: Account 1 calls execute() to transfer 200 wei to Account 2
@@ -3477,7 +3478,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       tx = await tba.connect(User1).execute(tbaAddress2, 200, "0x", 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 5: Account 1 calls execute() to transfer 300 wei to Account 2
@@ -3487,7 +3488,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       tx = await tba.connect(User1).execute(tbaAddress2, 300, "0x", 0);
       receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       transactionFee += Util.calcTransactionFee(receipt);
 
       // Step 6: Verify token balance of TBA account is increase 400 wei
@@ -3672,7 +3673,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       const tx = await User1.sendTransaction({ to: tbaAddress, value: 1000 });
       const receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       const transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 5: Verify TBA token balance of ERC20 is 10
@@ -3809,7 +3810,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       const tx = await User2.sendTransaction({ to: tbaAddress, value: 1000 });
 
       const receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       const transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 9: Verify User2 token balance of ERC20 is 0
@@ -4003,7 +4004,7 @@ describe("BoralabsTBA6551: Integration test", function () {
       );
       const tx = await tba.connect(User1).transferCoin(User1.address, 1000);
       const receipt = await tx.wait();
-      expect(receipt?.status).to.be.equal(1);
+      expect(receipt?.status).to.be.equal(TRANSACTION_SUCCESS);
       const transactionFee = Util.calcTransactionFee(receipt);
 
       // Step 9: Verify TBA’s owner balance is increase 1000 wei

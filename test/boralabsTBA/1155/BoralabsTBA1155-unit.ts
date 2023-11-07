@@ -18,7 +18,7 @@ import mlog from "../../util/mlog";
 import { BigNumberish, Interface } from "ethers";
 import Util from "../../util/util";
 
-describe("BoralabsTBA6551: Unit test", function () {
+describe("BoralabsTBA1155: Unit test", function () {
   mlog.injectLogger(this);
 
   let bora721: BoralabsTBA721;
@@ -29,7 +29,6 @@ describe("BoralabsTBA6551: Unit test", function () {
   let tbaAddress: string;
   let tba: BoralabsTBA6551Account;
   let tbaAddress2: string;
-  let tba2: BoralabsTBA6551Account;
 
   let User1: HardhatEthersSigner;
   let User2: HardhatEthersSigner;

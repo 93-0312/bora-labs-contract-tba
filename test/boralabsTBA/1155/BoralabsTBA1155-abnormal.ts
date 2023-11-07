@@ -18,7 +18,7 @@ import mlog from "../../util/mlog";
 import { BigNumberish, Interface } from "ethers";
 import Util from "../../util/util";
 
-describe("BoralabsTBA6551: Abnormal test", function () {
+describe("BoralabsTBA1155: Abnormal test", function () {
   mlog.injectLogger(this);
 
   let bora721: BoralabsTBA721;
@@ -30,8 +30,6 @@ describe("BoralabsTBA6551: Abnormal test", function () {
   let tba: BoralabsTBA6551Account;
 
   let User1: HardhatEthersSigner;
-  let User2: HardhatEthersSigner;
-  let User3: HardhatEthersSigner;
 
   let data: string;
   const amount = 10;
@@ -47,7 +45,7 @@ describe("BoralabsTBA6551: Abnormal test", function () {
   ]);
 
   beforeEach(async function () {
-    [User1, User2, User3] = await ethers.getSigners();
+    [User1] = await ethers.getSigners();
 
     // deploy bora721
     ({ bora721 } = await loadFixture(deployBora721));

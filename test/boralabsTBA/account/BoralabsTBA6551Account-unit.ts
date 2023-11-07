@@ -19,7 +19,7 @@ import {
 import mlog from "../../util/mlog";
 import { BigNumberish, Interface } from "ethers";
 
-describe("BoralabsTBA1155: Unit test", function () {
+describe("BoralabsTBA6551Account: Unit test", function () {
   mlog.injectLogger(this);
 
   let bora20: BoralabsTBA20;

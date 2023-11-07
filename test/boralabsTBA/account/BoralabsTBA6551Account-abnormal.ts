@@ -17,7 +17,7 @@ import {
   deployBora6551Registry,
 } from "../../util/fixture";
 import mlog from "../../util/mlog";
-import { BigNumberish, Interface } from "ethers";
+import { BigNumberish } from "ethers";
 
 describe("BoralabsTBA6551Account: Abnormal test", function () {
   mlog.injectLogger(this);
