@@ -6,7 +6,8 @@ import {
   BoralabsTBA1155,
   BoralabsTBA6551Account,
   BoralabsTBA6551Registry,
-} from "../typechain-types";
+  BoralabsTBA20,
+} from "../../typechain-types";
 
 class Util {
   static abi = new AbiCoder();
@@ -163,7 +164,8 @@ class Util {
     salt: number,
     connectUser: any
   ) {
-    let tbaAddresses = [];
+    let tbaAddresses: string[] = [];
+    let tbaContracts: BoralabsTBA6551Account[] = [];
     const chainId = network.config.chainId as BigNumberish;
     for (let i = 0; i < tokenIds.length; ++i) {
       await registry
@@ -178,8 +180,14 @@ class Util {
         );
       const tbaAddress = await registry.accountsOf(tokenAddress, tokenIds[i]);
       tbaAddresses.push(...tbaAddress);
+
+      const tbaContract = await ethers.getContractAt(
+        "BoralabsTBA6551Account",
+        tbaAddress[0]
+      );
+      tbaContracts.push(tbaContract);
     }
-    return tbaAddresses;
+    return [tbaAddresses, tbaContracts];
   }
 
   static async getTotalTBA(
@@ -195,6 +203,43 @@ class Util {
       result += accountsOfToken;
     }
     return result;
+  }
+
+  static async tokensCountOfTBAs(
+    contract1155: BoralabsTBA1155,
+    tbaAccounts: any[]
+  ) {
+    let accounts: any[] = ([] as any[]).concat(...tbaAccounts);
+    let result = 0;
+    for (let i = 0; i < accounts.length; ++i) {
+      const tokenOfAccount = Number(
+        await contract1155.tokenCountOf(accounts[i])
+      );
+      result += tokenOfAccount;
+    }
+    return result;
+  }
+
+  static async totalBalanceERC20(
+    contract20: BoralabsTBA20,
+    tbaAccounts: string[]
+  ) {
+    let balance = 0;
+    for (let i = 0; i < tbaAccounts.length; ++i) {
+      balance += Number(await contract20.balanceOf(tbaAccounts[i]));
+    }
+    return balance;
+  }
+
+  static async totalBalanceERC721(
+    contract721: BoralabsTBA721,
+    tbaAccounts: string[]
+  ) {
+    let balance = 0;
+    for (let i = 0; i < tbaAccounts.length; ++i) {
+      balance += Number(await contract721.balanceOf(tbaAccounts[i]));
+    }
+    return balance;
   }
 
   static showProgress(current: number, max: number) {
@@ -221,6 +266,7 @@ class Util {
       " complete... \r";
     process.stdout.write(bar);
   }
+
   static clearProgress() {
     process.stdout.write("\r\x1b[K");
   }
