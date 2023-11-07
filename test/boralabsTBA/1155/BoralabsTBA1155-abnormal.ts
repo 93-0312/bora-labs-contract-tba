@@ -7,16 +7,16 @@ import {
   BoralabsTBA1155,
   BoralabsTBA6551Account,
   BoralabsTBA6551Registry,
-} from "../../typechain-types";
+} from "../../../typechain-types";
 import {
   deployBora721,
   deployBora1155,
   deployBora6551Account,
   deployBora6551Registry,
-} from "../util/fixture";
-import mlog from "../util/mlog";
+} from "../../util/fixture";
+import mlog from "../../util/mlog";
 import { BigNumberish, Interface } from "ethers";
-import Util from "../util/util";
+import Util from "../../util/util";
 
 describe("BoralabsTBA6551: Abnormal test", function () {
   mlog.injectLogger(this);

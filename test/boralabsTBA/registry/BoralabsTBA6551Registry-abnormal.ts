@@ -11,8 +11,8 @@ import {
   deployBora721,
   deployBora6551Account,
   deployBora6551Registry,
-} from "../util/fixture";
-import mlog from "../util/mlog";
+} from "../../util/fixture";
+import mlog from "../../util/mlog";
 import { BigNumberish, Interface } from "ethers";
 
 describe("BoralabsTBA6551Registry: Abnormal test", function () {
