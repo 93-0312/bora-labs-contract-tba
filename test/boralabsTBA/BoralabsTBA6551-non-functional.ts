@@ -31,12 +31,13 @@ describe("BoralabsTBA6551: Non-functional test", function () {
   let bora6551Account: BoralabsTBA6551Account;
   let bora6551Registry: BoralabsTBA6551Registry;
 
+  let owner20: HardhatEthersSigner;
+
   let tbaAddress: string;
   let tba: BoralabsTBA6551Account;
 
   let User1: HardhatEthersSigner;
   let User2: HardhatEthersSigner;
-  let User3: HardhatEthersSigner;
 
   let data: string;
   const emptyData = "0x";
@@ -56,12 +57,13 @@ describe("BoralabsTBA6551: Non-functional test", function () {
   const iface1155 = new Interface([
     "function safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes data)",
     "function burn(uint256 id, uint256 amount)",
+    "function transfer(address to, uint256 amount)",
     "function tbaMint(address to, uint256 amount, bytes memory data)",
   ]);
 
   beforeEach(async function () {
     // deploy bora20
-    ({ bora20 } = await loadFixture(deployBora20));
+    ({ bora20, owner20 } = await loadFixture(deployBora20));
 
     // deploy bora721
     ({ bora721 } = await loadFixture(deployBora721));
@@ -75,7 +77,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     // deploy bora 6551 registry
     ({ bora6551Registry } = await loadFixture(deployBora6551Registry));
 
-    [User1, User2, User3] = await ethers.getSigners();
+    [User1, User2] = await ethers.getSigners();
 
     // mint erc721
     await bora721.tbaMint(User1.address);
@@ -1518,10 +1520,10 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     });
   });
 
-  describe.only("Load Testing - Create Account", async function () {
+  describe("Load Testing - Create Account", async function () {
     async function createAccountForMultiUser(mlog: mlog, numberOfUser: number) {
       // Create ${numberOfUser} users
-      const users = await Util.createMultiUser(numberOfUser, User3);
+      const users = await Util.createMultiUser(numberOfUser);
 
       // Step 1: Owner of ERC721 mint ${numberOfUser * 3} tokens for ${numberOfUser} users
       mlog.log(
@@ -1534,6 +1536,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         bora721
       );
       let tokenIds: number[] = ([] as number[]).concat(...tokenIdsArr);
+
       mlog.before(
         "Numbers [TBA accounts] :",
         await Util.getTotalTBA(tokenIds, bora721, bora6551Registry)
@@ -1590,6 +1593,220 @@ describe("BoralabsTBA6551: Non-functional test", function () {
     // Out of memory
     it.skip("Should be successful when 100.000 users create TBA account at the same times", async function () {
       await createAccountForMultiUser(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing - Execute - Mint ERC20", async function () {
+    async function mint(mlog: mlog, numberOfUser: number) {
+      mlog.before(
+        "[BoralabsTBA20]",
+        "total supply",
+        await bora20.totalSupply()
+      );
+
+      // Step 1: Owner of ERC721 mint ${numberOfUser} * 3 tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721]",
+        ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
+      );
+      const mintTimes = 1;
+      const users = await Util.createMultiUser(numberOfUser);
+      await Util.mintMulti721ForMultiUser(users, mintTimes, bora721);
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser} * 3 TBA accounts
+      mlog.log(
+        `[${numberOfUser} users]`,
+        `use createAccount() create 
+        ${numberOfUser * 3} TBA account`
+      );
+      let tbaAccounts: any[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        const tokenIds = await bora721.tokensOf(users[i]);
+        const TBAs = await Util.createMultiTBA(
+          await bora6551Account.getAddress(),
+          bora6551Registry,
+          await bora721.getAddress(),
+          tokenIds,
+          0,
+          users[i]
+        );
+        tbaAccounts.push(...TBAs);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      // Step 3: Owner of ERC20 mint token ERC20 with amount is 1 to each TBA
+      mlog.log(
+        "[Owner of ERC20]",
+        "mint token ERC20 with amount is 1 to each TBA"
+      );
+      const mintAmount = 1;
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        await bora20.mint(tbaAccounts[i], mintAmount);
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+
+      // Step 4: Verify token balance of all TBA accounts is 1.
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        expect(await bora20.balanceOf(tbaAccounts[i])).to.be.equal(mintAmount);
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+      mlog.after("[BoralabsTBA20]", "total supply", await bora20.totalSupply());
+    }
+
+    it("Should be successful when 100 users mint at the same time.", async function () {
+      await mint(this.mlog, 100);
+    });
+
+    it("Should be successful when 400 users mint at the same time.", async function () {
+      await mint(this.mlog, 400);
+    });
+
+    // Time out
+    it("Should be successful when 1.000 users mint at the same time.", async function () {
+      await mint(this.mlog, 1000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 5.000 users mint at the same time.", async function () {
+      await mint(this.mlog, 5000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 10.000 users mint at the same time.", async function () {
+      await mint(this.mlog, 10000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 100.000 users mint at the same time.", async function () {
+      await mint(this.mlog, 100000);
+    });
+  });
+
+  describe("Load Testing- Execute - Transfer ERC20", async function () {
+    async function transfer(mlog: mlog, numberOfUser: number) {
+      mlog.before(
+        "[BoralabsTBA20]",
+        "total supply:",
+        await bora20.totalSupply()
+      );
+      mlog.before(
+        "[Owner of ERC20]",
+        "token erc20 balance:",
+        await bora20.balanceOf(owner20.address)
+      );
+
+      // Step 1: Owner of ERC721 mint ${numberOfUser} *3 tokens for ${numberOfUser} users
+      mlog.log(
+        "[Owner of ERC721]",
+        ` mint ${numberOfUser * 3} tokens for ${numberOfUser} users`
+      );
+      const mintTimes = 1;
+      const users = await Util.createMultiUser(numberOfUser);
+      await Util.mintMulti721ForMultiUser(users, mintTimes, bora721);
+
+      // Step 2: ${numberOfUser} users use createAccount() to create ${numberOfUser} * 3 TBA accounts
+      let tbaAccounts: any[] = [];
+      for (let i = 0; i < users.length; ++i) {
+        const tokenIds = await bora721.tokensOf(users[i]);
+        const TBAs = await Util.createMultiTBA(
+          await bora6551Account.getAddress(),
+          bora6551Registry,
+          await bora721.getAddress(),
+          tokenIds,
+          0,
+          users[i]
+        );
+        tbaAccounts.push(TBAs);
+        Util.showProgress(i + 1, users.length);
+      }
+      Util.clearProgress();
+
+      // Step 3: Owner of ERC20 contract mint token with amount is 1 to each tba
+      mlog.log(
+        "[Owner of ERC20]",
+        "mint token ERC20 with amount is 1 to each TBA"
+      );
+      const mintAmount = 1;
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        for (let j = 0; j < tbaAccounts[i].length; j++) {
+          await bora20.mint(tbaAccounts[i][j], mintAmount);
+        }
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+      mlog.log("[BoralabsTBA20]", "total supply:", await bora20.totalSupply());
+
+      // Step 4: ${numberOfUser} users call execute() to transfer token ERC20 with amount is 1 from each TBA account to Owner of ERC20 contract
+      mlog.log(
+        `[${numberOfUser} users]`,
+        "call execute() to transfer token ERC20 with amount is 1 from each TBA account to Owner of ERC20 contract"
+      );
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        for (let j = 0; j < tbaAccounts[i].length; j++) {
+          data = iface1155.encodeFunctionData("transfer", [
+            owner20.address,
+            mintAmount,
+          ]);
+          const tba = await ethers.getContractAt(
+            "BoralabsTBA6551Account",
+            tbaAccounts[i][j]
+          );
+          await tba.connect(users[i]).execute(bora20.target, 0, data, 0);
+        }
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+
+      // Step 5: Verify token balance of all TBA accounts is 0
+      for (let i = 0; i < tbaAccounts.length; i++) {
+        for (let j = 0; j < tbaAccounts[i].length; j++) {
+          expect(await bora20.balanceOf(tbaAccounts[i][j])).to.be.equal(0);
+        }
+        Util.showProgress(i + 1, tbaAccounts.length);
+      }
+      Util.clearProgress();
+
+      // Step 6: Verify token balance of Owner of ERC20 contract is ${numberOfUser} * 3
+      expect(await bora20.balanceOf(owner20.address)).to.be.equal(
+        numberOfUser * mintAmount * 3
+      );
+      mlog.after(
+        "[Owner of ERC20]",
+        "token erc20 balance:",
+        await bora20.balanceOf(owner20.address)
+      );
+    }
+
+    it("Should be successful when 100 users transfer at the same time.", async function () {
+      await transfer(this.mlog, 100);
+    });
+
+    // Time out
+    it.skip("Should be successful when 200 users transfer at the same time.", async function () {
+      await transfer(this.mlog, 200);
+    });
+
+    // Time out
+    it.skip("Should be successful when 1.000 users transfer at the same time.", async function () {
+      await transfer(this.mlog, 1000);
+    });
+
+    // Out of memory
+    it("Should be successful when 5.000 users transfer at the same time.", async function () {
+      await transfer(this.mlog, 5000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 10.000 users transfer at the same time.", async function () {
+      await transfer(this.mlog, 10000);
+    });
+
+    // Out of memory
+    it.skip("Should be successful when 100.000 users transfer at the same time.", async function () {
+      await transfer(this.mlog, 100000);
     });
   });
 });

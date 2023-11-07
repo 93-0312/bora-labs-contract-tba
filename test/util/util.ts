@@ -1,4 +1,4 @@
-import { AbiCoder } from "ethers";
+import { AbiCoder, Signer } from "ethers";
 import { ethers, network } from "hardhat";
 import { BigNumberish, Interface } from "ethers";
 import {
@@ -41,7 +41,9 @@ class Util {
       tokenIds.push(mintBand * 2 + Number(availableMintNum) + i);
       tokenIds.push(mintBand * 3 + Number(availableMintNum) + i);
       await contract.tbaMint(mintTo);
+      Util.showProgress(i + 1, mintTimes);
     }
+    Util.clearProgress();
     return tokenIds;
   }
 
@@ -62,11 +64,13 @@ class Util {
       tokenIds.push(mintBand * 2 + Number(availableMintNum) + i);
       tokenIds.push(mintBand * 3 + Number(availableMintNum) + i);
       await tba.execute(await contract.getAddress(), 0, data, 0);
+      Util.showProgress(i + 1, mintTimes);
     }
+    Util.clearProgress();
     return tokenIds;
   }
 
-  static async mintMulti1155ForMultiUser(
+  static async mintMulti1155(
     mintTo: string,
     amount: number,
     mintData: any,
@@ -128,19 +132,24 @@ class Util {
     mintTimes: number,
     contract: BoralabsTBA721
   ) {
-    let tokenIds = [];
+    let tokenIds: number[][] = [];
     for (let i = 0; i < mintTo.length; ++i) {
       const tokenId = await this.mintMulti721(mintTo[i], mintTimes, contract);
-      tokenIds.push(...tokenId);
+      tokenIds.push(tokenId);
     }
     return tokenIds;
   }
 
-  static createMultiUser(numOfUsers: number) {
+  static async createMultiUser(numOfUsers: number) {
     const signers = [];
+    const users = await ethers.getSigners();
     for (let i = 0; i < numOfUsers; i++) {
       let wallet = ethers.Wallet.createRandom();
       wallet = wallet.connect(ethers.provider);
+      await users[0].sendTransaction({
+        to: wallet.address,
+        value: ethers.parseEther("1"),
+      });
       signers.push(wallet);
     }
     return signers;
@@ -150,23 +159,27 @@ class Util {
     implementAddress: string,
     registry: BoralabsTBA6551Registry,
     tokenAddress: string,
-    numOfAccount: number,
     tokenIds: any[],
-    salt: number
+    salt: number,
+    connectUser: any
   ) {
+    let tbaAddresses = [];
     const chainId = network.config.chainId as BigNumberish;
-    for (let i = 0; i < numOfAccount; ++i) {
-      await registry.createAccount(
-        implementAddress,
-        chainId,
-        tokenAddress,
-        tokenIds[i],
-        salt,
-        "0x"
-      );
-      Util.showProgress(i + 1, numOfAccount);
+    for (let i = 0; i < tokenIds.length; ++i) {
+      await registry
+        .connect(connectUser)
+        .createAccount(
+          implementAddress,
+          chainId,
+          tokenAddress,
+          tokenIds[i],
+          salt,
+          "0x"
+        );
+      const tbaAddress = await registry.accountsOf(tokenAddress, tokenIds[i]);
+      tbaAddresses.push(...tbaAddress);
     }
-    Util.clearProgress();
+    return tbaAddresses;
   }
 
   static async getTotalTBA(
