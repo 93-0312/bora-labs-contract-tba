@@ -18,7 +18,7 @@ import {
 } from "../util/fixture";
 import mlog from "../util/mlog";
 import { BigNumberish, Interface } from "ethers";
-import Util from "../util/util";
+import { Util, ProcessName } from "../util/util";
 
 describe("BoralabsTBA6551: Non-functional test", function () {
   mlog.injectLogger(this);
@@ -192,7 +192,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       );
       for (let i = 0; i < numberOfTransaction; ++i) {
         await bora20.mint(tbaAddress, 1);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.MINT, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -263,7 +263,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       ]);
       for (let i = 0; i < numberOfTransaction; i++) {
         await tba.execute(await bora20.getAddress(), 0, data, 0);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.TRANSFER, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -333,7 +333,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       data = iface20.encodeFunctionData("burn", [1]);
       for (let i = 0; i < numberOfTransaction; i++) {
         await tba.execute(await bora20.getAddress(), 0, data, 0);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.BURN, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -397,7 +397,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       data = iface20.encodeFunctionData("burnFrom", [User1.address, 1]);
       for (let i = 0; i < numberOfTransaction; i++) {
         await tba.connect(User1).execute(bora20.target, 0, data, 0);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.BURN, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -445,7 +445,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       data = iface721.encodeFunctionData("tbaMint", [tbaAddress]);
       for (let i = 0; i < numberOfTransaction; i++) {
         await tba.connect(User1).execute(bora721.target, 0, data, 0);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.MINT, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -529,7 +529,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           tokenIds[i],
         ]);
         await tba.connect(User1).execute(bora721.target, 0, data, 0);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.TRANSFER, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -616,7 +616,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           tokenIds[i],
         ]);
         await tba.connect(User1).execute(bora721.target, 0, data, 0);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.TRANSFER, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -746,7 +746,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           "0x",
         ]);
         await tba.execute(await bora1155.getAddress(), 0, data, 0);
-        Util.showProgress(i, numberOfTransaction);
+        Util.showProgress(ProcessName.TRANSFER, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -825,7 +825,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       for (let i = 0; i < numberOfTransaction; i++) {
         data = iface1155.encodeFunctionData("burn", [tokenIds[i], burnAmount]);
         await tba.execute(await bora1155.getAddress(), 0, data, 0);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.BURN, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -895,7 +895,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       );
       for (let i = 0; i < numberOfTransaction; i++) {
         await tba.transferCoin(User2.address, transferAmount);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.TRANSFER, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -978,7 +978,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       );
       for (let i = 0; i < numberOfTransaction * 3; i++) {
         await tba.transfer721(bora721.target, User2.address, tokenIds[i]);
-        Util.showProgress(i + 1, numberOfTransaction * 3);
+        Util.showProgress(ProcessName.TRANSFER, i + 1, numberOfTransaction * 3);
       }
       Util.clearProgress();
 
@@ -1052,7 +1052,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       );
       for (let i = 0; i < numberOfTransaction; i++) {
         await tba.transfer20(bora20.target, User2.address, 1);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.TRANSFER, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -1143,7 +1143,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             amount,
             emptyData
           );
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(ProcessName.TRANSFER, i + 1, numberOfTransaction);
       }
       Util.clearProgress();
 
@@ -1155,7 +1155,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         expect(
           await bora1155.balanceOf(User2.address, tokenIds[i])
         ).to.be.equal(amount);
-        Util.showProgress(i + 1, numberOfTransaction);
+        Util.showProgress(
+          ProcessName.VERIFY_BALANCE,
+          i + 1,
+          numberOfTransaction
+        );
       }
       Util.clearProgress();
 
@@ -1562,7 +1566,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           0,
           users[i]
         );
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -1630,7 +1634,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           users[i]
         );
         tbaAccounts.push(...(tbasOfUser as string[]));
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -1648,14 +1652,18 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       const mintAmount = 1;
       for (let i = 0; i < tbaAccounts.length; i++) {
         await bora20.mint(tbaAccounts[i], mintAmount);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccounts.length);
       }
       Util.clearProgress();
 
       // Step 4: Verify token balance of all TBA accounts is 1.
       for (let i = 0; i < tbaAccounts.length; i++) {
         expect(await bora20.balanceOf(tbaAccounts[i])).to.be.equal(mintAmount);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(
+          ProcessName.VERIFY_BALANCE,
+          i + 1,
+          tbaAccounts.length
+        );
       }
       Util.clearProgress();
       mlog.after(
@@ -1732,7 +1740,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -1751,7 +1759,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       const mintAmount = 1;
       for (let i = 0; i < tbaAccounts.length; i++) {
         await bora20.mint(tbaAccounts[i], mintAmount);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccounts.length);
       }
       Util.clearProgress();
       mlog.log(
@@ -1775,7 +1783,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           await tbaContractsByUser[i][j]
             .connect(users[i])
             .execute(bora20.target, 0, data, 0);
-          Util.showProgress(i + 1, tbaAccounts.length);
+          Util.showProgress(ProcessName.TRANSFER, i + 1, tbaAccounts.length);
         }
       }
       Util.clearProgress();
@@ -1783,7 +1791,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       // Step 5: Verify token balance of all TBA accounts is 0
       for (let i = 0; i < tbaAccounts.length; i++) {
         expect(await bora20.balanceOf(tbaAccounts[i])).to.be.equal(0);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(
+          ProcessName.VERIFY_BALANCE,
+          i + 1,
+          tbaAccounts.length
+        );
       }
       Util.clearProgress();
 
@@ -1869,7 +1881,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -1888,7 +1900,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       const mintAmount = 1;
       for (let i = 0; i < tbaAccounts.length; i++) {
         await bora20.mint(tbaAccounts[i], mintAmount);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccounts.length);
       }
       Util.clearProgress();
 
@@ -1905,14 +1917,18 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           await tbaContractsByUser[i][j]
             .connect(users[i])
             .execute(bora20.target, 0, data, 0);
-          Util.showProgress(i + 1, tbaAccounts.length);
+          Util.showProgress(ProcessName.BURN, i + 1, tbaAccounts.length);
         }
       }
 
       // Step 5: Verify token balance of all TBA accounts is 0
       for (let i = 0; i < tbaAccounts.length; i++) {
         expect(await bora20.balanceOf(tbaAccounts[i])).to.be.equal(0);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(
+          ProcessName.VERIFY_BALANCE,
+          i + 1,
+          tbaAccounts.length
+        );
       }
       Util.clearProgress();
 
@@ -1979,7 +1995,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2003,7 +2019,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           await tbaContractsByUser[i][j]
             .connect(users[i])
             .execute(bora721.target, 0, data, 0);
-          Util.showProgress(i + 1, tbaAccounts.length);
+          Util.showProgress(ProcessName.MINT, i + 1, tbaAccounts.length);
         }
       }
       Util.clearProgress();
@@ -2011,7 +2027,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       // Step 4: Verify token ERC721 balance of all TBA accounts is 3
       for (let i = 0; i < tbaAccounts.length; i++) {
         expect(await bora721.balanceOf(tbaAccounts[i])).to.be.equal(3);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(
+          ProcessName.VERIFY_BALANCE,
+          i + 1,
+          tbaAccounts.length
+        );
       }
       Util.clearProgress();
 
@@ -2089,7 +2109,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2111,7 +2131,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             .connect(users[i])
             .execute(bora721.target, 0, data, 0);
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccountsByUser.length);
       }
       Util.clearProgress();
 
@@ -2135,7 +2155,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
               .execute(bora721.target, 0, data, 0);
           }
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(
+          ProcessName.TRANSFER,
+          i + 1,
+          tbaAccountsByUser.length
+        );
       }
       Util.clearProgress();
 
@@ -2232,7 +2256,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2257,7 +2281,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             .connect(users[i])
             .execute(bora721.target, 0, data, 0);
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccountsByUser.length);
       }
       Util.clearProgress();
       mlog.log(
@@ -2279,7 +2303,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
               .execute(bora721.target, 0, data, 0);
           }
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(ProcessName.BURN, i + 1, tbaAccountsByUser.length);
       }
       Util.clearProgress();
 
@@ -2361,7 +2385,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2389,7 +2413,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             .connect(users[i])
             .execute(bora1155.target, 0, data, 0);
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccountsByUser.length);
       }
       Util.clearProgress();
 
@@ -2472,7 +2496,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2494,7 +2518,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             .connect(users[i])
             .execute(bora1155.target, 0, data, 0);
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccountsByUser.length);
       }
       Util.clearProgress();
 
@@ -2529,7 +2553,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
               .execute(bora1155.target, 0, data, 0);
           }
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(
+          ProcessName.TRANSFER,
+          i + 1,
+          tbaAccountsByUser.length
+        );
       }
       Util.clearProgress();
 
@@ -2622,7 +2650,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2643,7 +2671,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
           to: tbaAccounts[i],
           value: transferAmount,
         });
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(
+          ProcessName.TRANSFER,
+          i + 1,
+          tbaAccountsByUser.length
+        );
       }
       Util.clearProgress();
       mlog.before(
@@ -2666,14 +2698,22 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             .connect(users[i])
             .transferCoin(User2.address, transferAmount);
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(
+          ProcessName.TRANSFER,
+          i + 1,
+          tbaAccountsByUser.length
+        );
       }
       Util.clearProgress();
 
       // Step 5: Verify coin balance of each TBA is 0.
       for (let i = 0; i < tbaAccounts.length; i++) {
         expect(await ethers.provider.getBalance(tbaAccounts[i])).to.be.equal(0);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(
+          ProcessName.VERIFY_BALANCE,
+          i + 1,
+          tbaAccounts.length
+        );
       }
       Util.clearProgress();
 
@@ -2745,7 +2785,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2768,7 +2808,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             .connect(users[i])
             .execute(await bora1155.getAddress(), 0, data, 0);
         }
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.MINT, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2797,7 +2837,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
               .execute(bora1155.target, 0, data, 0);
           }
         }
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.BURN, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2877,7 +2917,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -2896,7 +2936,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       const mintAmount = 1;
       for (let i = 0; i < tbaAccounts.length; i++) {
         await bora20.mint(tbaAccounts[i], mintAmount);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccounts.length);
       }
       Util.clearProgress();
       mlog.log(
@@ -2917,14 +2957,22 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             .connect(users[i])
             .transfer20(bora20.target, owner20.address, 1);
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(
+          ProcessName.TRANSFER,
+          i + 1,
+          tbaAccountsByUser.length
+        );
       }
       Util.clearProgress();
 
       // Step 5: Verify token ERC20 balance of each TBA is 0
       for (let i = 0; i < tbaAccounts.length; i++) {
         expect(await bora20.balanceOf(tbaAccounts[i])).to.be.equal(0);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(
+          ProcessName.VERIFY_BALANCE,
+          i + 1,
+          tbaAccounts.length
+        );
       }
       Util.clearProgress();
 
@@ -3017,7 +3065,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -3032,7 +3080,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
       mlog.log("[Owner of ERC721]", "mint 3 tokens to each TBA");
       for (let i = 0; i < tbaAccounts.length; i++) {
         await bora721.tbaMint(tbaAccounts[i]);
-        Util.showProgress(i + 1, tbaAccounts.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccounts.length);
       }
       Util.clearProgress();
       mlog.log(
@@ -3054,7 +3102,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             .connect(users[i])
             .transfer721(bora721.target, owner721.address, tokenIds[0]);
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(
+          ProcessName.TRANSFER,
+          i + 1,
+          tbaAccountsByUser.length
+        );
       }
       Util.clearProgress();
 
@@ -3152,7 +3204,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
         );
         tbaAccountsByUser.push(tbasOfUser as string[]);
         tbaContractsByUser.push(tbaContracts);
-        Util.showProgress(i + 1, users.length);
+        Util.showProgress(ProcessName.CREATE_TBA, i + 1, users.length);
       }
       Util.clearProgress();
 
@@ -3174,7 +3226,7 @@ describe("BoralabsTBA6551: Non-functional test", function () {
             mintTimes
           );
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(ProcessName.MINT, i + 1, tbaAccountsByUser.length);
       }
       Util.clearProgress();
 
@@ -3205,7 +3257,11 @@ describe("BoralabsTBA6551: Non-functional test", function () {
               );
           }
         }
-        Util.showProgress(i + 1, tbaAccountsByUser.length);
+        Util.showProgress(
+          ProcessName.TRANSFER,
+          i + 1,
+          tbaAccountsByUser.length
+        );
       }
       Util.clearProgress();
 

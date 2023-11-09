@@ -9,7 +9,7 @@ import {
   BoralabsTBA20,
 } from "../../typechain-types";
 
-class Util {
+export class Util {
   static abi = new AbiCoder();
 
   static decodeFunctionResult(resultType: Array<string>, data: string) {
@@ -50,7 +50,7 @@ class Util {
       tokenIds.push(mintBand * 2 + availableMintNum + i);
       tokenIds.push(mintBand * 3 + availableMintNum + i);
       await erc721Contract.tbaMint(to);
-      Util.showProgress(i + 1, times);
+      Util.showProgress(ProcessName.MINT, i + 1, times);
     }
     Util.clearProgress();
     return tokenIds;
@@ -74,7 +74,7 @@ class Util {
       tokenIds.push(mintBand * 4 + availableMintNum + i);
       tokenIds.push(mintBand * 5 + availableMintNum + i);
       await erc1155Contract.tbaMint(to, amount, data);
-      Util.showProgress(i + 1, times);
+      Util.showProgress(ProcessName.MINT, i + 1, times);
     }
     Util.clearProgress();
     return tokenIds;
@@ -103,7 +103,7 @@ class Util {
         data,
         0
       );
-      Util.showProgress(i + 1, times);
+      Util.showProgress(ProcessName.MINT, i + 1, times);
     }
     Util.clearProgress();
 
@@ -139,7 +139,7 @@ class Util {
         data,
         0
       );
-      Util.showProgress(i + 1, times);
+      Util.showProgress(ProcessName.MINT, i + 1, times);
     }
     Util.clearProgress();
     return tokenIds;
@@ -255,7 +255,7 @@ class Util {
     return balance;
   }
 
-  static showProgress(current: number, max: number) {
+  static showProgress(name: string, current: number, max: number) {
     let percent = Math.floor((current / max) * 100);
     let barContent = "";
     for (let i = 1; i <= 100; i++) {
@@ -266,9 +266,9 @@ class Util {
       }
     }
     let bar =
-      "Progress [" +
-      barContent +
-      "] " +
+      "Progress: " +
+      name +
+      ` [${barContent}]` +
       percent +
       "%" +
       " (" +
@@ -283,6 +283,14 @@ class Util {
   static clearProgress() {
     process.stdout.write("\r\x1b[K");
   }
+}
+
+export enum ProcessName {
+  MINT = "Mint",
+  BURN = "Burn",
+  TRANSFER = "Transfer",
+  CREATE_TBA = "Create TBA",
+  VERIFY_BALANCE = "Verify balance",
 }
 
 export default Util;
