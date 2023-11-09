@@ -3,12 +3,14 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import {
+  BoralabsTBA20,
   BoralabsTBA721,
   BoralabsTBA1155,
   BoralabsTBA6551Account,
   BoralabsTBA6551Registry,
 } from "../../../typechain-types";
 import {
+  deployBora20,
   deployBora721,
   deployBora1155,
   deployBora6551Account,
@@ -21,6 +23,7 @@ import Util from "../../util/util";
 describe("BoralabsTBA1155: Abnormal test", function () {
   mlog.injectLogger(this);
 
+  let bora20: BoralabsTBA20;
   let bora721: BoralabsTBA721;
   let bora1155: BoralabsTBA1155;
   let bora6551Account: BoralabsTBA6551Account;
@@ -46,6 +49,9 @@ describe("BoralabsTBA1155: Abnormal test", function () {
 
   beforeEach(async function () {
     [User1] = await ethers.getSigners();
+
+    // deploy bora20
+    ({ bora20 } = await loadFixture(deployBora20));
 
     // deploy bora721
     ({ bora721 } = await loadFixture(deployBora721));
