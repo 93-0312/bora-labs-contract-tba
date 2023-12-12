@@ -123,7 +123,7 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
 
         string memory baseURI = getBaseURI();
 
-        return string(abi.encodePacked(baseURI, Strings.toString(number)));
+        return string(abi.encodePacked(baseURI, Strings.toString(number+1000)));
     }
 
     /**

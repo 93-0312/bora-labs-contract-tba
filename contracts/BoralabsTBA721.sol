@@ -92,7 +92,7 @@ contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard{
             number /= 10;
         }
         number %= oneTimeMintNum;
-        return string(abi.encodePacked(baseURI_, Strings.toString(number)));
+        return string(abi.encodePacked(baseURI_, Strings.toString(number+1000)));
     }
 
     // =========================================================================================== //
