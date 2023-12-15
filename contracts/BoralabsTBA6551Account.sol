@@ -23,8 +23,13 @@ import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import "@openzeppelin/contracts/interfaces/IERC1155.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
-contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Account, IERC6551Executable {
-
+contract BoralabsTBA6551Account is
+    BoralabsBase,
+    IERC165,
+    IERC1271,
+    IERC6551Account,
+    IERC6551Executable
+{
     uint256 public state;
     bytes4 private constant ERC1155_ACCEPTED = 0xf23a6e61; // bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))
     bytes4 private constant ERC1155_BATCH_ACCEPTED = 0xbc197c81; // bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))
@@ -55,12 +60,10 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
     // =========================================================================================== //
     // Support Function : Transfer : owner 가 다른 사람에게 전송한다.
     // =========================================================================================== //
-    function transferCoin(
-        address to,
-        uint256 amount
-    ) external onlyOwner {
+    function transferCoin(address to, uint256 amount) external onlyOwner {
         payable(to).transfer(amount); // 코인 전송
     }
+
     function transfer20(
         address contractAddress,
         address to,
@@ -84,7 +87,13 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
         uint256 amount,
         bytes memory data
     ) external onlyOwner {
-        IERC1155(contractAddress).safeTransferFrom(address(this), to, tokenId, amount, data);
+        IERC1155(contractAddress).safeTransferFrom(
+            address(this),
+            to,
+            tokenId,
+            amount,
+            data
+        );
     }
 
     // =========================================================================================== //
@@ -109,7 +118,11 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
         bytes32 hash,
         bytes memory signature
     ) external view returns (bytes4 magicValue) {
-        bool isValid = SignatureChecker.isValidSignatureNow(owner(), hash, signature);
+        bool isValid = SignatureChecker.isValidSignatureNow(
+            owner(),
+            hash,
+            signature
+        );
 
         if (isValid) {
             return IERC1271.isValidSignature.selector;
@@ -125,15 +138,14 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
         bytes4 interfaceId
     ) external pure returns (bool) {
         return (interfaceId == type(IERC165).interfaceId ||
-        interfaceId == type(IERC6551Account).interfaceId ||
+            interfaceId == type(IERC6551Account).interfaceId ||
             interfaceId == type(IERC6551Executable).interfaceId);
     }
 
     // =========================================================================================== //
     // token
     // =========================================================================================== //
-    function token(
-    ) public view returns ( uint256, address, uint256 ) {
+    function token() public view returns (uint256, address, uint256) {
         bytes memory footer = new bytes(0x60);
 
         assembly {
@@ -143,12 +155,7 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
         return abi.decode(footer, (uint256, address, uint256));
     }
 
-    // =========================================================================================== //
-    // 6551 OWNER : Bora 관련된 contract 에서 Ownable 을 extends 받기 때문에 여기서는 override 를 해 준다...
-    // 이 6551 contract 의 owner 는 이 주소 생성시 한 NFT contract / tokenId 의 owner 이다....
-    // 따라서 현재 이 로직으로는 721 로만 계정을 생성할 수 있다.....
-    // =========================================================================================== //
-    function owner() public override view returns (address) {
+    function owner() public view override returns (address) {
         (uint256 chainId, address tokenContract, uint256 tokenId) = token();
         if (chainId != block.chainid) return address(0);
 
@@ -158,9 +165,7 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
     // =========================================================================================== //
     // NATIVE TOKEN RECEIVE FUNCTION
     // =========================================================================================== //
-    receive() external payable{
-
-    }
+    receive() external payable {}
 
     // =========================================================================================== //
     // 20 RECEIVE FUNCTION
@@ -171,11 +176,14 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
     // =========================================================================================== //
     function onERC721Received(
         address operator,
-        address ,
+        address,
         uint256 tokenId,
         bytes calldata data
     ) external pure returns (bytes4) {
-        require(operator != address(0) && tokenId > 0 && data.length >= 0, "Invalid parameter");
+        require(
+            operator != address(0) && tokenId > 0 && data.length >= 0,
+            "Invalid parameter"
+        );
         return this.onERC721Received.selector;
     }
 
@@ -184,7 +192,7 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
     // =========================================================================================== //
     function onERC1155Received(
         address operator,
-        address ,
+        address,
         uint256 id,
         uint256 value,
         bytes calldata data
@@ -201,16 +209,18 @@ contract BoralabsTBA6551Account is BoralabsBase, IERC165, IERC1271, IERC6551Acco
      */
     function onERC1155BatchReceived(
         address operator,
-        address ,
+        address,
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
     ) external pure returns (bytes4) {
         require(
-            operator != address(0) && ids.length > 0 && values.length > 0 && data.length >= 0,
+            operator != address(0) &&
+                ids.length > 0 &&
+                values.length > 0 &&
+                data.length >= 0,
             "Invalid parameter"
         );
         return ERC1155_BATCH_ACCEPTED;
     }
-
 }

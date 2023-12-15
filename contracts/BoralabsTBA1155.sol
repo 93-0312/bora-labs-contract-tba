@@ -18,26 +18,20 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
-    // =========================================================================================== //
-    // BORA LABS 용 변수
-    // =========================================================================================== //
-    // 발행가능 mintNum : mint 할 때마다 1씩 올라간다...
     uint256 public availableMintNum = 1;
-    // 1회 mint 시 발급할 수량 : character : 3, item : 5
-    // 3일 경우 metadata 는 tokenId 앞에 숫자가 1 이면 1, 2이면 2, 3이면 3, 4이면 1 이렇게 리턴한다.
     uint256 public oneTimeMintNum = 5;
-    // 발행 번호대 oneTimeMintNum 이 5 이면 10000001, 20000001, 30000001, 40000001, 50000001 이렇게 민트된다.
     uint256 public mintBand = 10000000;
 
     using EnumerableSet for EnumerableSet.UintSet;
     using Strings for uint256;
 
     mapping(address => EnumerableSet.UintSet) private _tokenIds; // Store list token id of account
-    string public contractURI = "https://tokenmetadata.boraportal.com/contracts/2022999998/"; // Contract URI for Contract Information
-    string public baseURI_ = "https://tokenmetadata.boraportal.com/contracts/2022999998/tokens/";
+    string public contractURI =
+        "https://tokenmetadata.boraportal.com/contracts/2022999998/"; // Contract URI for Contract Information
+    string public baseURI_ =
+        "https://tokenmetadata.boraportal.com/contracts/2022999998/tokens/";
 
-    constructor() ERC1155(baseURI_) {
-    }
+    constructor() ERC1155(baseURI_) {}
 
     // =========================================================================================== //
     // MINT
@@ -48,17 +42,14 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
      * @param amount amount to mint
      * @param data additional data
      */
-    function tbaMint(
-        address to,
-        uint256 amount,
-        bytes memory data
-    ) public {
-        for ( uint256 i = 1; i <= oneTimeMintNum; ++i ){
-            super._mint(to, mintBand*i + availableMintNum, amount, data);
+    function tbaMint(address to, uint256 amount, bytes memory data) public {
+        for (uint256 i = 1; i <= oneTimeMintNum; ++i) {
+            super._mint(to, mintBand * i + availableMintNum, amount, data);
         }
-        unchecked { ++availableMintNum; }
+        unchecked {
+            ++availableMintNum;
+        }
     }
-
 
     // =========================================================================================== //
     // BURN
@@ -123,7 +114,8 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
 
         string memory baseURI = getBaseURI();
 
-        return string(abi.encodePacked(baseURI, Strings.toString(number+1000)));
+        return
+            string(abi.encodePacked(baseURI, Strings.toString(number + 1000)));
     }
 
     /**
@@ -145,29 +137,31 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
      */
     function tokensOf(
         address owner
-    ) external view returns (uint256[] memory tokenIds_, uint256[] memory balances_) {
+    )
+        external
+        view
+        returns (uint256[] memory tokenIds_, uint256[] memory balances_)
+    {
         uint256 assetCount = _tokenIds[owner].length();
+        if (assetCount == 0) return (tokenIds_, balances_);
 
-        uint256[] memory tokenIds = new uint256[](assetCount);
-        uint256[] memory balances = new uint256[](assetCount);
+        tokenIds_ = new uint256[](assetCount);
+        balances_ = new uint256[](assetCount);
 
         for (uint256 i = 0; i < assetCount; ++i) {
             uint256 tokenId = _tokenIds[owner].at(i);
-            tokenIds[i] = tokenId;
-            balances[i] = balanceOf(owner, tokenId);
+            tokenIds_[i] = tokenId;
+            balances_[i] = balanceOf(owner, tokenId);
         }
-
-        tokenIds_ = tokenIds;
-        balances_ = balances;
     }
 
     /**
-     * @notice Get number of token IDs of owner
+     * @notice Get count of token IDs of owner
      * @param owner who owns the token
-     * @return number of token IDs
+     * @return count of token IDs
      */
-    function tokenCountOf(address owner) external view returns (uint256) {
-        return _tokenIds[owner].length();
+    function tokenCountOf(address owner) external view returns (uint256 count) {
+        count = _tokenIds[owner].length();
     }
 
     /**
@@ -183,5 +177,16 @@ contract BoralabsTBA1155 is BoralabsBase, ERC1155Supply, ReentrancyGuard {
         } else {
             _tokenIds[account].remove(tokenId);
         }
+    }
+
+    // =========================================================================================== //
+    // MODIFIER
+    // =========================================================================================== //
+    modifier onlyApprovedOrOwner(address from) {
+        require(
+            isApprovedForAll(from, _msgSender()),
+            "Caller is not token owner or approved"
+        );
+        _;
     }
 }

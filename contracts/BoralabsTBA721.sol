@@ -13,29 +13,23 @@ import "./common/BoralabsBase.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard{
-    // =========================================================================================== //
-    // BORA LABS 용 변수
-    // =========================================================================================== //
-    // 발행가능 mintNum : mint 할 때마다 1씩 올라간다...
+contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard {
     uint256 public availableMintNum = 1;
-    // 1회 mint 시 발급할 수량 : character : 3, item : 5
-    // 3일 경우 metadata 는 tokenId 앞에 숫자가 1 이면 1, 2이면 2, 3이면 3, 4이면 1 이렇게 리턴한다.
     uint256 public oneTimeMintNum = 3;
-    // 발행 번호대 oneTimeMintNum 이 3 이면 10000001, 20000001, 30000001 이렇게 민트된다.
     uint256 public mintBand = 10000000;
 
     // =========================================================================================== //
     // 721
     // =========================================================================================== //
-    string public contractURI = "https://tokenmetadata.boraportal.com/contracts/2022999999/";
-    string public baseURI_ = "https://tokenmetadata.boraportal.com/contracts/2022999999/tokens/";
+    string public contractURI =
+        "https://tokenmetadata.boraportal.com/contracts/2022999999/";
+    string public baseURI_ =
+        "https://tokenmetadata.boraportal.com/contracts/2022999999/tokens/";
 
     constructor(
         string memory name_,
         string memory symbol_
-    ) ERC721(name_, symbol_) {
-    }
+    ) ERC721(name_, symbol_) {}
 
     /**
     function setContractURI(string calldata uri) external onlyOwner {
@@ -54,29 +48,26 @@ contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard{
         address from,
         address to,
         uint256 tokenId
-    ) public override (ERC721, IERC721)  {
+    ) public override(ERC721, IERC721) {
         super.safeTransferFrom(from, to, tokenId);
     }
 
     // =========================================================================================== //
     // MINT
     // =========================================================================================== //
-    function tbaMint(
-        address to
-    ) public {
-        for ( uint256 i = 1; i <= oneTimeMintNum; ++i ){
-            _safeMint(to, mintBand*i + availableMintNum );
+    function tbaMint(address to) public {
+        for (uint256 i = 1; i <= oneTimeMintNum; ++i) {
+            _safeMint(to, mintBand * i + availableMintNum);
         }
-        unchecked { ++availableMintNum; }
+        unchecked {
+            ++availableMintNum;
+        }
     }
 
     // =========================================================================================== //
     // BURN
     // =========================================================================================== //
-    function burn(
-        uint256 tokenId
-    ) external {
-        require(_ownerOf(tokenId) == _msgSender(), "only owner can burn");
+    function burn(uint256 tokenId) external {
         _burn(tokenId);
     }
 
@@ -92,21 +83,22 @@ contract BoralabsTBA721 is BoralabsBase, ERC721Enumerable, ReentrancyGuard{
             number /= 10;
         }
         number %= oneTimeMintNum;
-        return string(abi.encodePacked(baseURI_, Strings.toString(number+1000)));
+        return
+            string(abi.encodePacked(baseURI_, Strings.toString(number + 1000)));
     }
 
     // =========================================================================================== //
     // My Token List
     // =========================================================================================== //
-    function tokensOf(address owner_) external view returns (uint256[] memory tokenIds){
+    function tokensOf(
+        address owner_
+    ) external view returns (uint256[] memory tokenIds) {
         uint256 balance = balanceOf(owner_);
 
-        uint256[] memory list = new uint256[](balance);
+        tokenIds = new uint256[](balance);
 
         for (uint256 i = 0; i < balance; ++i) {
-            list[i] = tokenOfOwnerByIndex(owner_, i);
+            tokenIds[i] = tokenOfOwnerByIndex(owner_, i);
         }
-        return list;
     }
-
 }
