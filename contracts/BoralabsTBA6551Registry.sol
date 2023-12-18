@@ -15,13 +15,11 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 contract BoralabsTBA6551Registry is IERC6551Registry {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    mapping(address => mapping(uint256 => EnumerableSet.AddressSet)) private _tokenList;
+    mapping(address => mapping(uint256 => EnumerableSet.AddressSet))
+        private _tokenList;
 
     error AccountCreationFailed();
 
-    // =========================================================================================== //
-    // Create Account : tokenContract / tokenId 를 가지고 발급된 리스트를 들고 있어야 하는 부분 확인 필요.
-    // =========================================================================================== //
     function createAccount(
         address implementation,
         uint256 chainId,
@@ -38,11 +36,21 @@ contract BoralabsTBA6551Registry is IERC6551Registry {
             salt
         );
 
-        address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
+        address _account = Create2.computeAddress(
+            bytes32(salt),
+            keccak256(code)
+        );
 
         if (_account.code.length != 0) return _account;
 
-        emit AccountCreated(_account, implementation, chainId, tokenContract, tokenId, salt);
+        emit AccountCreated(
+            _account,
+            implementation,
+            chainId,
+            tokenContract,
+            tokenId,
+            salt
+        );
 
         assembly {
             _account := create2(0, add(code, 0x20), mload(code), salt)
@@ -85,16 +93,13 @@ contract BoralabsTBA6551Registry is IERC6551Registry {
         return Create2.computeAddress(bytes32(salt), bytecodeHash);
     }
 
-    // =========================================================================================== //
-    // Create Account : tokenContract / tokenId 를 가지고 발급된 리스트를 들고 있어야 하는 부분 확인 필요.
-    // =========================================================================================== //
     function accountsOf(
         address tokenContract,
         uint256 tokenId
-    ) external view returns( address[] memory accounts ){
+    ) external view returns (address[] memory accounts) {
         uint256 count = _tokenList[tokenContract][tokenId].length();
         accounts = new address[](count);
-        for (uint256 i = 0; i < count; ++i){
+        for (uint256 i = 0; i < count; ++i) {
             accounts[i] = _tokenList[tokenContract][tokenId].at(i);
         }
     }
